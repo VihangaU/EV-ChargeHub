@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import apiService from '@/services/api';
 
 interface AddUserFormProps {
   isOpen: boolean;
@@ -71,8 +72,12 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await apiService.createUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
+      });
       
       toast({
         title: "User Created",
@@ -82,10 +87,10 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
       resetForm();
       onUserAdded();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create user. Please try again.",
+        description: error.message || "Failed to create user. Please try again.",
         variant: "destructive",
       });
     } finally {

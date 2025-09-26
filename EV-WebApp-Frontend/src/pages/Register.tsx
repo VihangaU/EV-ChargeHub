@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import apiService from '@/services/api';
 
 const Register: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -20,6 +21,8 @@ const Register: React.FC = () => {
     email: '',
     phone: '',
     address: '',
+    vehicleModel: '',
+    vehicleNumber: '',
     password: '',
     confirmPassword: ''
   });
@@ -39,7 +42,7 @@ const Register: React.FC = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.nic || !formData.name || !formData.email || !formData.password) {
+    if (!formData.nic || !formData.name || !formData.email || !formData.password || !formData.vehicleModel || !formData.vehicleNumber) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -80,8 +83,16 @@ const Register: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Simulate registration process
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await apiService.register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        nic: formData.nic,
+        phone: formData.phone,
+        address: formData.address,
+        vehicleModel: formData.vehicleModel,
+        vehicleNumber: formData.vehicleNumber
+      });
       
       toast({
         title: "Registration Successful!",
@@ -95,14 +106,16 @@ const Register: React.FC = () => {
         email: '',
         phone: '',
         address: '',
+        vehicleModel: '',
+        vehicleNumber: '',
         password: '',
         confirmPassword: ''
       });
       
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration Failed",
-        description: "An error occurred during registration. Please try again.",
+        description: error.message || "An error occurred during registration. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -202,6 +215,35 @@ const Register: React.FC = () => {
                   onChange={handleInputChange}
                   disabled={isLoading}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleModel">Vehicle Model *</Label>
+                  <Input
+                    id="vehicleModel"
+                    name="vehicleModel"
+                    type="text"
+                    placeholder="e.g., Tesla Model 3"
+                    value={formData.vehicleModel}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleNumber">Vehicle Number *</Label>
+                  <Input
+                    id="vehicleNumber"
+                    name="vehicleNumber"
+                    type="text"
+                    placeholder="e.g., ABC-1234"
+                    value={formData.vehicleNumber}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

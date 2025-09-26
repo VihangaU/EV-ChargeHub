@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import apiService from '@/services/api';
+import { ChargingStation } from '@/types';
 
 interface ScheduleSlot {
   id: string;
@@ -20,7 +22,7 @@ interface ScheduleSlot {
 }
 
 interface ManageScheduleFormProps {
-  station: any;
+  station: ChargingStation | null;
   isOpen: boolean;
   onClose: () => void;
   onScheduleUpdated: () => void;
@@ -150,17 +152,20 @@ const ManageScheduleForm: React.FC<ManageScheduleFormProps> = ({ station, isOpen
     }
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!station) return;
+      
+      const response = await apiService.updateStationSchedule(station.id, scheduleSlots);
+      
       toast({
         title: "Schedule Updated",
-        description: `Schedule for ${station?.name} has been updated successfully.`,
+        description: `Schedule for ${station.name} has been updated successfully.`,
       });
       onScheduleUpdated();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update schedule. Please try again.",
+        description: error.message || "Failed to update schedule. Please try again.",
         variant: "destructive",
       });
     } finally {

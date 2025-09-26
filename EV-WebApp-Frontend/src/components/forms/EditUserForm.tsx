@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { User as UserType } from '@/types';
+import apiService from '@/services/api';
 
 interface EditUserFormProps {
   user: UserType | null;
@@ -72,8 +73,12 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ user, isOpen, onClose, onUs
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await apiService.updateUser(user.id, {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        status: formData.status
+      });
       
       toast({
         title: "User Updated",
@@ -82,10 +87,10 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ user, isOpen, onClose, onUs
 
       onUserUpdated();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update user. Please try again.",
+        description: error.message || "Failed to update user. Please try again.",
         variant: "destructive",
       });
     } finally {

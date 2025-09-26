@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 class ApiService {
   private baseURL: string;
@@ -33,8 +33,11 @@ class ApiService {
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const config: RequestInit = {
-      headers: this.getHeaders(),
       ...options,
+      headers: {
+        ...this.getHeaders(),
+        ...options.headers,
+      },
     };
 
     try {
