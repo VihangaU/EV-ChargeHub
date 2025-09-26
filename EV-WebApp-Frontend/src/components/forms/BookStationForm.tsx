@@ -7,9 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import apiService from '@/services/api';
+import { ChargingStation } from '@/types';
 
 interface BookStationFormProps {
-  station: any;
+  station: ChargingStation | null;
   isOpen: boolean;
   onClose: () => void;
   onBookingCreated: () => void;
@@ -74,13 +76,25 @@ const BookStationForm: React.FC<BookStationFormProps> = ({ station, isOpen, onCl
     }
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!station) return;
+      
+      const endTime = calculateEndTime(formData.startTime, formData.duration);
+      const totalCost = calculateCost(formData.duration);
+      
+      const response = await apiService.createBooking({
+        stationId: station.id,
+        reservationDate: formData.date,
+        startTime: formData.startTime,
+        endTime: endTime,
+        duration: parseInt(formData.duration),
+        totalCost: totalCost,
+        notes: formData.notes
+      });
+      
       toast({
         title: "Booking Submitted",
-        description: `Your booking at ${station?.name} has been submitted for approval.`,
+        description: `Your booking at ${station.name} has been submitted for approval.`,
       });
-      onBookingCreated();
-      onClose();
       
       // Reset form
       setFormData({
@@ -89,10 +103,13 @@ const BookStationForm: React.FC<BookStationFormProps> = ({ station, isOpen, onCl
         duration: '2',
         notes: '',
       });
-    } catch (error) {
+      
+      onBookingCreated();
+      onClose();
+    } catch (error: any) {
       toast({
         title: "Booking Failed",
-        description: "Failed to create booking. Please try again.",
+        description: error.message || "Failed to create booking. Please try again.",
         variant: "destructive",
       });
     } finally {

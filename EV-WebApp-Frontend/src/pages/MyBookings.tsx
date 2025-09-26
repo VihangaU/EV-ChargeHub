@@ -62,10 +62,10 @@ const MyBookings: React.FC = () => {
         title: "Booking Cancelled",
         description: "Your booking has been cancelled successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to cancel booking.",
+        description: error.message || "Failed to cancel booking.",
         variant: "destructive",
       });
     }
