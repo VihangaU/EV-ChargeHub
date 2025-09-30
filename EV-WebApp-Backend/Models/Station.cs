@@ -25,7 +25,7 @@ public class Station
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
+    public string? Id { get; set; }
 
     [BsonElement("name")]
     public string Name { get; set; } = null!;
@@ -49,6 +49,7 @@ public class Station
     public int AvailableSlots { get; set; }
 
     [BsonElement("operatorId")]
+    [BsonRepresentation(BsonType.ObjectId)]  // Add this attribute
     public string OperatorId { get; set; } = null!;
 
     [BsonElement("operatorName")]
@@ -65,4 +66,13 @@ public class Station
 
     [BsonElement("schedule")]
     public List<ScheduleSlot> Schedule { get; set; } = new List<ScheduleSlot>();
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("__v")]
+    public int Version { get; set; }
 }
