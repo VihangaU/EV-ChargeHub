@@ -7,9 +7,10 @@ public class Booking
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
+    public string? Id { get; set; }
 
     [BsonElement("evOwnerId")]
+    [BsonRepresentation(BsonType.ObjectId)]
     public string EVOwnerId { get; set; } = null!;
 
     [BsonElement("evOwnerName")]
@@ -19,6 +20,7 @@ public class Booking
     public string EVOwnerNIC { get; set; } = null!;
 
     [BsonElement("stationId")]
+    [BsonRepresentation(BsonType.ObjectId)]
     public string StationId { get; set; } = null!;
 
     [BsonElement("stationName")]
@@ -53,4 +55,7 @@ public class Booking
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("__v")]
+    public int Version { get; set; }
 }
