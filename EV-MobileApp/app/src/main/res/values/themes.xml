@@ -1,5 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.EvMobileApp" parent="Theme.AppCompat.Light.NoActionBar" />
+    <!-- Base application theme -->
+    <style name="Theme.EvMobileApp" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Primary brand colors -->
+        <item name="colorPrimary">@color/blue_600</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/blue_100</item>
+        <item name="colorOnPrimaryContainer">@color/blue_900</item>
+
+        <!-- Secondary / Accent -->
+        <item name="colorSecondary">@color/cyan_500</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Background / Surface -->
+        <item name="android:colorBackground">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/grey_900</item>
+
+        <!-- Typography -->
+<!--        <item name="android:fontFamily">@font/roboto</item>-->
+        <item name="materialButtonOutlinedStyle">@style/CustomOutlinedButton</item>
+    </style>
+
 </resources>

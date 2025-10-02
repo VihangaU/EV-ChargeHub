@@ -45,4 +45,12 @@
         <item name="android:textColor">@android:color/white</item>
     </style>
 
+    <style name="CustomOutlinedButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/blue_600</item>
+        <item name="iconTint">@color/blue_600</item>
+        <item name="strokeColor">@color/blue_600</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
 </resources>

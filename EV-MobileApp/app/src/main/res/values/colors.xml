@@ -26,4 +26,27 @@
     <color name="statusInactive">#F44336</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color> <!-- Red -->
+
+    <color name="blue_primary">#1976D2</color>
+    <color name="blue_secondary">#757575</color>
+    <color name="blue_light">#BBDEFB</color>
+
+    <color name="blue_900">#0D47A1</color>
+    <color name="blue_700">#1976D2</color>
+    <color name="blue_600">#1E88E5</color>
+    <color name="blue_grey_400">#78909C</color>
+    <color name="blue_grey_600">#546E7A</color>
+    <color name="blue_100">#BBDEFB</color>
+    <color name="cyan_500">#00BCD4</color>
+    <color name="grey_900">#212121</color>
+    
+    <!-- Light gradient colors -->
+    <color name="gradient_start">#F8F9FA</color>
+    <color name="gradient_end">#E3F2FD</color>
+    
+    <!-- Additional light theme colors -->
+    <color name="light_primary">#6C63FF</color>
+    <color name="light_secondary">#9C88FF</color>
+    <color name="soft_green">#4CAF50</color>
+    <color name="soft_orange">#FF9800</color>
 </resources>
