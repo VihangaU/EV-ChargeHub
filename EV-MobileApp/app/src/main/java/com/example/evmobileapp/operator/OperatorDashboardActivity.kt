@@ -1,15 +1,22 @@
 package com.example.evmobileapp.operator
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
+import com.example.evmobileapp.owner.BookingHistoryActivity
+import com.example.evmobileapp.owner.OwnerDashboardActivity
+import com.example.evmobileapp.owner.ProfileActivity
+import com.example.evmobileapp.owner.ReservationActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
@@ -18,9 +25,13 @@ class OperatorDashboardActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
-    private lateinit var pendingReservationsText: TextView
-    private lateinit var approvedReservationsText: TextView
-    private lateinit var confirmButton: Button
+    private lateinit var tvTotalStations: TextView
+    private lateinit var tvTotalBookings: TextView
+    private lateinit var tvActiveBookings: TextView
+    private lateinit var tvTotalRevenue: TextView
+    private lateinit var tvAvailableSlots: TextView
+    private lateinit var confirmButton: MaterialButton
+    private lateinit var bottomNavigation: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,9 +40,15 @@ class OperatorDashboardActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         apiClient = ApiClient()
 
-        pendingReservationsText = findViewById(R.id.pending_reservations)
-        approvedReservationsText = findViewById(R.id.approved_reservations)
+        tvTotalStations = findViewById(R.id.tv_total_stations)
+        tvTotalBookings = findViewById(R.id.tv_total_bookings)
+        tvActiveBookings = findViewById(R.id.tv_active_bookings)
+        tvTotalRevenue = findViewById(R.id.tv_total_revenue)
+        tvAvailableSlots = findViewById(R.id.tv_available_slots)
         confirmButton = findViewById(R.id.confirm_button)
+        bottomNavigation = findViewById(R.id.bottom_navigation_operator)
+
+        setupBottomNavigation()
 
         // Fetch the user data from the backend
         val token = sessionManager.getToken()
@@ -46,21 +63,55 @@ class OperatorDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchDashboardData(token: String) {
-        val client = apiClient.client
-        val request = apiClient.getRequest("http://10.0.2.2:5001/api/bookings/dashboard", token)
+    private fun setupBottomNavigation() {
+        bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    // Already on home for operator
+                    true
+                }
+                R.id.nav_reservations -> {
+                    startActivity(Intent(this, ReservationActivity::class.java))
+                    true
+                }
+                R.id.nav_history -> {
+                    startActivity(Intent(this, BookingHistoryActivity::class.java))
+                    true
+                }
+                R.id.nav_profile -> {
+                    startActivity(Intent(this, ProfileActivity::class.java))
+                    true
+                }
+                else -> false
+            }
+        }
+        bottomNavigation.selectedItemId = R.id.nav_home
+    }
 
-        request.enqueue(object : Callback {
+    private fun fetchDashboardData(token: String) {
+        val client = okhttp3.OkHttpClient()
+        val request = Request.Builder()
+            .url("http://10.0.2.2:5001/api/dashboard/stats")
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
-                    val jsonResponse = JSONObject(responseBody!!)
-                    val pendingCount = jsonResponse.getInt("pendingReservations")
-                    val approvedCount = jsonResponse.getInt("approvedReservations")
+                    val jsonResponse = JSONObject(responseBody ?: "{}")
+                    val totalStations = jsonResponse.optInt("totalStations", 0)
+                    val totalBookings = jsonResponse.optInt("totalBookings", 0)
+                    val activeBookings = jsonResponse.optInt("activeBookings", 0)
+                    val totalRevenue = jsonResponse.optInt("totalRevenue", 0)
+                    val availableSlots = jsonResponse.optInt("availableSlots", 0)
 
                     runOnUiThread {
-                        pendingReservationsText.text = "Pending Reservations: $pendingCount"
-                        approvedReservationsText.text = "Approved Reservations: $approvedCount"
+                        tvTotalStations.text = "Total Stations: $totalStations"
+                        tvTotalBookings.text = "Total Bookings: $totalBookings"
+                        tvActiveBookings.text = "Active Bookings: $activeBookings"
+                        tvTotalRevenue.text = "Total Revenue: LKR $totalRevenue"
+                        tvAvailableSlots.text = "Available Slots: $availableSlots"
                     }
                 } else {
                     runOnUiThread {
@@ -76,8 +127,4 @@ class OperatorDashboardActivity : AppCompatActivity() {
             }
         })
     }
-}
-
-private fun Response.enqueue(callback: Callback) {
-
 }

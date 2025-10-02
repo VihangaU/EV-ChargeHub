@@ -22,6 +22,8 @@
         <activity android:name=".owner.BookingHistoryActivity" />
         <activity android:name=".owner.ProfileActivity" />
         <activity android:name=".owner.ReservationActivity" />
+        <activity android:name=".operator.OperatorLoginActivity" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

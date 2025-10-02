@@ -67,10 +67,16 @@ class LoginActivity : AppCompatActivity() {
                     sessionManager.saveToken(token)
 
                     runOnUiThread {
-                        if (role == "ev_owner") {
-                            startActivity(Intent(this@LoginActivity, OwnerDashboardActivity::class.java))
-                        } else {
-                            startActivity(Intent(this@LoginActivity, OperatorDashboardActivity::class.java))
+                        when (role) {
+                            "ev_owner" -> {
+                                startActivity(Intent(this@LoginActivity, OwnerDashboardActivity::class.java))
+                            }
+                            "station_operator" -> {
+                                startActivity(Intent(this@LoginActivity, OperatorDashboardActivity::class.java))
+                            }
+                            else -> {
+                                Toast.makeText(this@LoginActivity, "Unsupported user role: $role", Toast.LENGTH_SHORT).show()
+                            }
                         }
                         finish()
                     }
