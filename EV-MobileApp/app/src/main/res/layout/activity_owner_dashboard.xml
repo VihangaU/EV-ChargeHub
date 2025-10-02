@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/blue_gradient"
     android:padding="30dp"
     tools:context=".owner.OwnerDashboardActivity">
 
@@ -13,54 +14,127 @@
         android:layout_height="wrap_content"
         android:text="Dashboard"
         android:textSize="32sp"
-        android:textColor="@android:color/black"
+        android:textColor="#1976D2"
         android:layout_marginTop="50dp"
         android:layout_marginBottom="30dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <TextView
-        android:id="@+id/pending_reservations"
-        android:layout_width="wrap_content"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/total_bookings_card"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Pending Reservations: 0"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
+        android:layout_marginTop="20dp"
+        app:cardBackgroundColor="#E3F2FD"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
         app:layout_constraintTop_toBottomOf="@+id/dashboard_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <TextView
-        android:id="@+id/approved_reservations"
-        android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="20dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_agenda"
+                android:layout_marginEnd="12dp"
+                app:tint="#1976D2" />
+
+            <TextView
+                android:id="@+id/pending_reservations"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Bookings: 0"
+                android:textSize="18sp"
+                android:textColor="#1565C0"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/active_bookings_card"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Approved Reservations: 0"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
-        app:layout_constraintTop_toBottomOf="@+id/pending_reservations"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="#E1F5FE"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/total_bookings_card"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <Button
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="20dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_info_details"
+                android:layout_marginEnd="12dp"
+                app:tint="#0277BD" />
+
+            <TextView
+                android:id="@+id/approved_reservations"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Active Bookings: 0"
+                android:textSize="18sp"
+                android:textColor="#0277BD"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="#B3E5FC"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintTop_toBottomOf="@+id/active_bookings_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/create_reservation_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Create Reservation"
-        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTint="#2196F3"
         android:textColor="@android:color/white"
-        app:layout_constraintTop_toBottomOf="@+id/approved_reservations"
+        app:cornerRadius="12dp"
+        app:elevation="4dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/view_history_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="View Booking History"
-        android:backgroundTint="@color/colorAccent"
+        android:backgroundTint="#1976D2"
         android:textColor="@android:color/white"
+        app:cornerRadius="12dp"
+        app:elevation="4dp"
         app:layout_constraintTop_toBottomOf="@+id/create_reservation_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

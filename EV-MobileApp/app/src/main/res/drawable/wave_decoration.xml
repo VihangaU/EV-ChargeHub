@@ -1,0 +1,9 @@
+<!-- res/drawable/wave_decoration.xml (for decoration) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:height="40dp"
+    android:viewportWidth="360"
+    android:viewportHeight="40">
+    <path
+        android:fillColor="@color/blue_primary"
+        android:pathData="M0,40 Q90,0 180,20 Q270,0 360,40 L360,40 L0,40 Z"/>
+</vector>
