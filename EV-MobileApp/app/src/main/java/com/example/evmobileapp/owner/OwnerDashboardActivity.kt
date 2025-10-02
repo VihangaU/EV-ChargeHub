@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
 import com.example.evmobileapp.owner.ReservationActivity
 import com.example.evmobileapp.owner.BookingHistoryActivity
+import com.example.evmobileapp.owner.ProfileActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -60,7 +61,7 @@ class OwnerDashboardActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-
+                    startActivity(Intent(this, ProfileActivity::class.java))
                     true
                 }
                 else -> false

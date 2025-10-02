@@ -67,7 +67,7 @@ class BookingHistoryActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-                    // TODO: Navigate to ProfileActivity
+                    startActivity(Intent(this, ProfileActivity::class.java))
                     true
                 }
                 else -> false

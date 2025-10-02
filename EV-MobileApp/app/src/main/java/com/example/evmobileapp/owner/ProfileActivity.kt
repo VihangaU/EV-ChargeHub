@@ -1,0 +1,205 @@
+package com.example.evmobileapp.owner
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import com.example.evmobileapp.R
+import com.example.evmobileapp.auth.LoginActivity
+import com.example.evmobileapp.owner.OwnerDashboardActivity
+import com.example.evmobileapp.owner.ReservationActivity
+import com.example.evmobileapp.utils.ApiClient
+import com.example.evmobileapp.utils.SessionManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import org.json.JSONObject
+import java.io.IOException
+
+class ProfileActivity : AppCompatActivity() {
+
+    private lateinit var sessionManager: SessionManager
+    private lateinit var apiClient: ApiClient
+    private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var ivAppLogo: ImageView
+    private lateinit var tvName: TextView
+    private lateinit var tvNic: TextView
+    private lateinit var tvEmail: TextView
+    private lateinit var tvPhone: TextView
+    private lateinit var tvAddress: TextView
+    private lateinit var tvVehicleModel: TextView
+    private lateinit var tvVehicleNumber: TextView
+    private lateinit var tvStatus: TextView
+    private lateinit var btnDeactivate: MaterialButton
+    private lateinit var btnEditProfile: MaterialButton
+    private lateinit var btnLogout: MaterialButton
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_profile)
+
+        sessionManager = SessionManager(this)
+        apiClient = ApiClient()
+
+        ivAppLogo = findViewById(R.id.iv_app_logo)
+        tvName = findViewById(R.id.tv_name)
+        tvNic = findViewById(R.id.tv_nic)
+        tvEmail = findViewById(R.id.tv_email)
+        tvPhone = findViewById(R.id.tv_phone)
+        tvAddress = findViewById(R.id.tv_address)
+        tvVehicleModel = findViewById(R.id.tv_vehicle_model)
+        tvVehicleNumber = findViewById(R.id.tv_vehicle_number)
+        tvStatus = findViewById(R.id.tv_status)
+        btnDeactivate = findViewById(R.id.btn_deactivate)
+        btnEditProfile = findViewById(R.id.btn_edit_profile)
+        btnLogout = findViewById(R.id.btn_logout)
+        bottomNavigation = findViewById(R.id.bottom_navigation_profile)
+
+        setupBottomNavigation()
+        setupButtons()
+
+        val token = sessionManager.getToken()
+        if (token != null) {
+            fetchProfileData(token)
+        } else {
+            Toast.makeText(this, "No token found. Please login.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupBottomNavigation() {
+        bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    startActivity(Intent(this, OwnerDashboardActivity::class.java))
+                    true
+                }
+                R.id.nav_reservations -> {
+                    startActivity(Intent(this, ReservationActivity::class.java))
+                    true
+                }
+                R.id.nav_history -> {
+                    startActivity(Intent(this, BookingHistoryActivity::class.java))
+                    true
+                }
+                R.id.nav_profile -> {
+                    // Already on profile, do nothing
+                    true
+                }
+                else -> false
+            }
+        }
+        bottomNavigation.selectedItemId = R.id.nav_profile
+    }
+
+    private fun setupButtons() {
+        btnDeactivate.setOnClickListener {
+            showDeactivateConfirmation()
+        }
+        btnEditProfile.setOnClickListener {
+            // TODO: Navigate to EditProfileActivity
+            //startActivity(Intent(this, EditProfileActivity::class.java))
+        }
+        btnLogout.setOnClickListener {
+            sessionManager.clearSession()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun showDeactivateConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Deactivate Account")
+            .setMessage("Are you sure you want to deactivate your account? This action cannot be undone.")
+            .setPositiveButton("Deactivate") { _, _ ->
+                val token = sessionManager.getToken()
+                val userId = sessionManager.getUserId() // Assume SessionManager has getUserId()
+                if (token != null && userId != null) {
+                    deactivateAccount(token, userId.toString())
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun deactivateAccount(token: String, userId: String) {
+        val client = OkHttpClient()
+        val json = JSONObject().apply {
+            put("status", "inactive")
+        }
+        val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), json.toString())
+        val request = Request.Builder()
+            .url("http://10.0.2.2:5001/api/evowners/$userId")
+            .addHeader("Authorization", "Bearer $token")
+            .put(body)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(this@ProfileActivity, "Account deactivated successfully", Toast.LENGTH_SHORT).show()
+                        sessionManager.clearSession()
+                        startActivity(Intent(this@ProfileActivity, LoginActivity::class.java))
+                        finish()
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this@ProfileActivity, "Failed to deactivate account", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@ProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+    }
+
+    private fun fetchProfileData(token: String) {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("http://10.0.2.2:5001/api/evowners/profile/me")
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    val jsonResponse = JSONObject(responseBody ?: "{}")
+
+                    runOnUiThread {
+                        tvName.text = jsonResponse.optString("name", "N/A")
+                        tvNic.text = jsonResponse.optString("nic", "N/A")
+                        tvEmail.text = jsonResponse.optString("email", "N/A")
+                        tvPhone.text = jsonResponse.optString("phone", "N/A")
+                        tvAddress.text = jsonResponse.optString("address", "N/A")
+                        tvVehicleModel.text = jsonResponse.optString("vehicleModel", "N/A")
+                        tvVehicleNumber.text = jsonResponse.optString("vehicleNumber", "N/A")
+                        tvStatus.text = jsonResponse.optString("status", "N/A").capitalize()
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this@ProfileActivity, "Failed to fetch profile", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@ProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+    }
+}
+
+private fun SessionManager.getUserId() {
+    TODO("Not yet implemented")
+}
