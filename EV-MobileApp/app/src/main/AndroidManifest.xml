@@ -19,6 +19,7 @@
         <activity android:name=".auth.SignupActivity" />
         <activity android:name=".operator.OperatorDashboardActivity" />
         <activity android:name=".owner.OwnerDashboardActivity" />
+        <activity android:name=".owner.BookingHistoryActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
