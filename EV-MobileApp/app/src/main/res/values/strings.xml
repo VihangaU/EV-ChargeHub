@@ -1,3 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EvMobileApp</string>
+    <!-- App Title -->
+    <string name="app_name">EV Charging</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Login</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_button">Login</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Register</string>
+    <string name="register_email_hint">Email</string>
+    <string name="register_password_hint">Password</string>
+    <string name="register_name_hint">Full Name</string>
+    <string name="register_nic_hint">NIC</string>
+    <string name="register_phone_hint">Phone Number</string>
+    <string name="register_address_hint">Address</string>
+    <string name="register_vehicle_model_hint">Vehicle Model</string>
+    <string name="register_vehicle_number_hint">Vehicle Number</string>
+    <string name="register_button">Register</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="pending_reservations">Pending Reservations: </string>
+    <string name="approved_reservations">Approved Reservations: </string>
+    <string name="create_reservation_button">Create Reservation</string>
+    <string name="view_history_button">View Booking History</string>
+
+    <!-- Reservation Screen -->
+    <string name="reservation_title">Create Reservation</string>
+    <string name="reservation_date_hint">Reservation Date (YYYY-MM-DD)</string>
+    <string name="reservation_time_hint">Reservation Time (HH:mm)</string>
+    <string name="station_hint">Charging Station</string>
+
+    <!-- QR Code Display Screen -->
+    <string name="qr_display_title">Your Booking QR Code</string>
+    <string name="close_button">Close</string>
+
+    <!-- Operator Login Screen -->
+    <string name="operator_login_title">Station Operator Login</string>
+    <string name="operator_login_button">Login</string>
+
+    <!-- Operator Scan Screen -->
+    <string name="operator_scan_title">Scan QR Code</string>
+    <string name="start_scan_button">Start Scan</string>
+
+    <!-- Booking History Screen -->
+    <string name="booking_history_title">Booking History</string>
+
+    <!-- Errors and Messages -->
+    <string name="login_failed">Login Failed</string>
+    <string name="network_error">Network Error</string>
+    <string name="registration_failed">Registration Failed</string>
+    <string name="reservation_failed">Reservation Failed</string>
+    <string name="reservation_success">Reservation Created Successfully</string>
 </resources>
