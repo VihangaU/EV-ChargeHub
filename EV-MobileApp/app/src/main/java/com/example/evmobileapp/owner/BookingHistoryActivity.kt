@@ -1,11 +1,13 @@
 package com.example.evmobileapp.owner
 
-import android.database.DataSetObserver
+import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ListAdapter
+import android.widget.BaseAdapter
 import android.widget.ListView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
@@ -21,6 +23,7 @@ class BookingHistoryActivity : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
     private lateinit var bookingListView: ListView
+    private val bookings = mutableListOf<JSONObject>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +37,8 @@ class BookingHistoryActivity : AppCompatActivity() {
         val token = sessionManager.getToken()
         if (token != null) {
             fetchBookingHistory(token)
+        } else {
+            Toast.makeText(this, "No token found. Please login.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -50,74 +55,65 @@ class BookingHistoryActivity : AppCompatActivity() {
                     val responseBody = response.body?.string()
                     val jsonResponse = JSONArray(responseBody)
 
+                    bookings.clear()
+                    for (i in 0 until jsonResponse.length()) {
+                        bookings.add(jsonResponse.getJSONObject(i))
+                    }
+
                     runOnUiThread {
-                        // Parse and display booking history in ListView
-                        val bookingAdapter = BookingHistoryAdapter(this@BookingHistoryActivity, jsonResponse)
-                        bookingListView.adapter = bookingAdapter
+                        bookingListView.adapter =
+                            BookingHistoryAdapter(this@BookingHistoryActivity, bookings)
                     }
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this@BookingHistoryActivity, "Failed to fetch booking history", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@BookingHistoryActivity,
+                            "Failed to fetch booking history",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    Toast.makeText(this@BookingHistoryActivity, "Network error", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@BookingHistoryActivity,
+                        "Network error",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         })
     }
 }
 
-class BookingHistoryAdapter(bookingHistoryActivity: BookingHistoryActivity, jsonResponse: JSONArray) : ListAdapter{
-    override fun registerDataSetObserver(observer: DataSetObserver?) {
-        TODO("Not yet implemented")
-    }
+class BookingHistoryAdapter(
+    private val context: Context,
+    private val bookings: List<JSONObject>
+) : BaseAdapter() {
 
-    override fun unregisterDataSetObserver(observer: DataSetObserver?) {
-        TODO("Not yet implemented")
-    }
+    override fun getCount(): Int = bookings.size
 
-    override fun getCount(): Int {
-        TODO("Not yet implemented")
-    }
+    override fun getItem(position: Int): Any = bookings[position]
 
-    override fun getItem(position: Int): Any {
-        TODO("Not yet implemented")
-    }
-
-    override fun getItemId(position: Int): Long {
-        TODO("Not yet implemented")
-    }
-
-    override fun hasStableIds(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun getItemId(position: Int): Long = position.toLong()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        TODO("Not yet implemented")
-    }
+        val rowView = convertView ?: LayoutInflater.from(context)
+            .inflate(R.layout.item_reservation, parent, false)
 
-    override fun getItemViewType(position: Int): Int {
-        TODO("Not yet implemented")
-    }
+        val booking = bookings[position]
 
-    override fun getViewTypeCount(): Int {
-        TODO("Not yet implemented")
-    }
+        val stationName = rowView.findViewById<TextView>(R.id.reservation_station)
+        val dateTime = rowView.findViewById<TextView>(R.id.reservation_date_time)
+        val status = rowView.findViewById<TextView>(R.id.reservation_status)
 
-    override fun isEmpty(): Boolean {
-        TODO("Not yet implemented")
-    }
+        // Bind data safely
+        stationName.text = booking.optString("stationName", "Unknown Station")
+        dateTime.text = booking.optString("date", "") + " " + booking.optString("time", "")
+        status.text = booking.optString("status", "Unknown")
 
-    override fun areAllItemsEnabled(): Boolean {
-        TODO("Not yet implemented")
+        return rowView
     }
-
-    override fun isEnabled(position: Int): Boolean {
-        TODO("Not yet implemented")
-    }
-
 }

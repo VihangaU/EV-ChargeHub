@@ -1,11 +1,16 @@
 package com.example.evmobileapp.owner
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
+import com.example.evmobileapp.owner.ReservationActivity
+import com.example.evmobileapp.owner.BookingHistoryActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.json.JSONObject
 import okhttp3.*
 import java.io.IOException
@@ -16,6 +21,7 @@ class OwnerDashboardActivity : AppCompatActivity() {
     private lateinit var apiClient: ApiClient
     private lateinit var pendingReservationsText: TextView
     private lateinit var approvedReservationsText: TextView
+    private lateinit var bottomNavigation: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,12 +32,43 @@ class OwnerDashboardActivity : AppCompatActivity() {
 
         pendingReservationsText = findViewById(R.id.pending_reservations)
         approvedReservationsText = findViewById(R.id.approved_reservations)
+        bottomNavigation = findViewById(R.id.bottom_navigation)
+
+        // Set up bottom navigation
+        setupBottomNavigation()
 
         // Fetch the user data from the backend
         val token = sessionManager.getToken()
         if (token != null) {
             fetchDashboardData(token)
         }
+    }
+
+    private fun setupBottomNavigation() {
+        bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    // Already on home, do nothing
+                    true
+                }
+                R.id.nav_reservations -> {
+                    startActivity(Intent(this, ReservationActivity::class.java))
+                    true
+                }
+                R.id.nav_history -> {
+                    startActivity(Intent(this, BookingHistoryActivity::class.java))
+                    true
+                }
+                R.id.nav_profile -> {
+
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // Select home by default
+        bottomNavigation.selectedItemId = R.id.nav_home
     }
 
     private fun fetchDashboardData(token: String) {
@@ -46,7 +83,7 @@ class OwnerDashboardActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     val jsonResponse = JSONObject(responseBody!!)
-                    
+
                     // Use correct field names from dashboard API
                     val totalBookings = jsonResponse.optInt("totalBookings", 0)
                     val activeBookings = jsonResponse.optInt("activeBookings", 0)
@@ -57,16 +94,16 @@ class OwnerDashboardActivity : AppCompatActivity() {
                     }
                 } else {
                     runOnUiThread {
-                        pendingReservationsText.text = "Pending Reservations: 0"
-                        approvedReservationsText.text = "Approved Reservations: 0"
+                        pendingReservationsText.text = "Total Bookings: 0"
+                        approvedReservationsText.text = "Active Bookings: 0"
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    pendingReservationsText.text = "Pending Reservations: 0"
-                    approvedReservationsText.text = "Approved Reservations: 0"
+                    pendingReservationsText.text = "Total Bookings: 0"
+                    approvedReservationsText.text = "Active Bookings: 0"
                 }
             }
         })
