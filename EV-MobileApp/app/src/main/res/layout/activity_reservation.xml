@@ -4,68 +4,226 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="30dp"
+    android:background="@drawable/blue_gradient"
     tools:context=".owner.ReservationActivity">
 
-    <TextView
-        android:id="@+id/reservation_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Create Reservation"
-        android:textSize="32sp"
-        android:textColor="@android:color/black"
-        android:layout_marginTop="50dp"
-        android:layout_marginBottom="30dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_layout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="30dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation_reservation">
 
-    <EditText
-        android:id="@+id/reservation_date"
+        <TextView
+            android:id="@+id/reservation_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Station"
+            android:textSize="32sp"
+            android:textColor="#1976D2"
+            android:textStyle="bold"
+            android:layout_marginTop="50dp"
+            android:layout_marginBottom="30dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_stations"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="20dp"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@+id/reservation_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/booking_form"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="20dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/reservation_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:fillViewport="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="24dp">
+
+                        <TextView
+                            android:id="@+id/tv_selected_station"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Selected Station"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#1976D2"
+                            android:layout_marginBottom="20dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            app:startIconDrawable="@android:drawable/ic_menu_today"
+                            app:boxStrokeColor="#B3E5FC">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_date"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Reservation Date (YYYY-MM-DD)"
+                                android:inputType="none"
+                                android:enabled="false" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_pick_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pick Date"
+                            android:backgroundTint="#2196F3"
+                            android:layout_marginBottom="16dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            app:startIconDrawable="@android:drawable/ic_menu_day"
+                            app:boxStrokeColor="#B3E5FC">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_start_time"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Start Time (HH:MM)"
+                                android:inputType="none"
+                                android:enabled="false" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_pick_start_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pick Start Time"
+                            android:backgroundTint="#2196F3"
+                            android:layout_marginBottom="16dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            app:startIconDrawable="@android:drawable/ic_menu_day"
+                            app:boxStrokeColor="#B3E5FC">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_end_time"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="End Time (HH:MM)"
+                                android:inputType="none"
+                                android:enabled="false" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_pick_end_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pick End Time"
+                            android:backgroundTint="#2196F3"
+                            android:layout_marginBottom="16dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            app:boxStrokeColor="#B3E5FC">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_notes"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Notes (Optional)"
+                                android:inputType="textMultiLine"
+                                android:lines="3" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                </ScrollView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_back_to_stations"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Back to Stations"
+                        android:backgroundTint="#757575"
+                        android:textColor="@android:color/white"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_create_booking"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Create Booking"
+                        android:backgroundTint="#2196F3"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="12dp"
+                        app:elevation="4dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation_reservation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Reservation Date (YYYY-MM-DD)"
-        android:inputType="date"
-        android:padding="15dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="@color/colorPrimary"
-        app:layout_constraintTop_toBottomOf="@+id/reservation_title"
+        android:background="#FFFFFF"
+        app:itemIconTint="@color/bottom_nav_text_color"
+        app:itemTextColor="@color/bottom_nav_text_color"
+        app:itemRippleColor="#2196F3"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <EditText
-        android:id="@+id/reservation_time"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Reservation Time (HH:mm)"
-        android:inputType="time"
-        android:padding="15dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="@color/colorPrimary"
-        app:layout_constraintTop_toBottomOf="@+id/reservation_date"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <EditText
-        android:id="@+id/station"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Charging Station"
-        android:padding="15dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="@color/colorPrimary"
-        app:layout_constraintTop_toBottomOf="@+id/reservation_time"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <Button
-        android:id="@+id/create_reservation_button"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Create Reservation"
-        android:backgroundTint="@color/colorPrimary"
-        android:textColor="@android:color/white"
-        app:layout_constraintTop_toBottomOf="@+id/station"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
