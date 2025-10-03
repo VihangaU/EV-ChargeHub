@@ -26,6 +26,8 @@
         <activity android:name=".operator.OperatorDashboardActivity" />
         <activity android:name=".operator.OperatorLoginActivity" />
         <activity android:name=".operator.OperatorProfileActivity" />
+        <activity android:name=".operator.BookingOperatorActivity" />
+
 
         <activity
             android:name=".MainActivity"

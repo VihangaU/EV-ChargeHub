@@ -102,7 +102,7 @@ class OperatorProfileActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_bookings_station -> {
-                    startActivity(Intent(this, BookingHistoryActivity::class.java))
+                    startActivity(Intent(this, BookingOperatorActivity::class.java))
                     true
                 }
                 R.id.nav_profile_station -> {
