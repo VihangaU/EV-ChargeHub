@@ -1,9 +1,16 @@
 package com.example.evmobileapp.owner
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +27,14 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.WriterException
+import com.google.zxing.common.BitMatrix
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import java.io.IOException
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.absoluteValue
@@ -131,6 +145,7 @@ class BookingHistoryActivity : AppCompatActivity() {
         val tvNotes = dialogView.findViewById<TextView>(R.id.tv_notes)
         val btnEdit = dialogView.findViewById<Button>(R.id.btn_edit)
         val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnGenerateQR = dialogView.findViewById<Button>(R.id.btn_generate_qr)
 
         tvStationName.text = booking.optString("stationName", "N/A")
         tvAddress.text = booking.optString("stationAddress", "N/A")
@@ -144,9 +159,11 @@ class BookingHistoryActivity : AppCompatActivity() {
 
         val status = booking.optString("status", "").lowercase()
         val isPending = status == "pending"
+        val isApproved = status == "approved"
 
         btnEdit.visibility = if (isPending) View.VISIBLE else View.GONE
         btnCancel.visibility = if (isPending) View.VISIBLE else View.GONE
+        btnGenerateQR.visibility = if (isApproved) View.VISIBLE else View.GONE
 
         val dialog = AlertDialog.Builder(this)
             .setTitle("Booking Details")
@@ -164,7 +181,124 @@ class BookingHistoryActivity : AppCompatActivity() {
             showCancelBookingConfirmation(booking, token)
         }
 
+        btnGenerateQR.setOnClickListener {
+            dialog.dismiss()
+            generateAndShowQR(booking)
+        }
+
         dialog.show()
+    }
+
+    private fun generateAndShowQR(booking: JSONObject) {
+        val bookingId = booking.optString("_id", booking.optString("id", ""))
+        if (bookingId.isEmpty()) {
+            Toast.makeText(this, "Booking ID not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Build QR data string (include key details, including Booking ID)
+        val qrData = """
+            Booking ID: $bookingId
+            Station: ${booking.optString("stationName", "N/A")}
+            Address: ${booking.optString("stationAddress", "N/A")}
+            Date: ${booking.optString("reservationDate", "N/A")}
+            Time: ${booking.optString("startTime", "N/A")} - ${booking.optString("endTime", "N/A")}
+            Duration: ${booking.optInt("duration", 0)} hours
+            Cost: LKR ${booking.optInt("totalCost", 0)}
+            Status: ${booking.optString("status", "N/A")}
+        """.trimIndent()
+
+        val bitmap = generateQRCode(qrData) ?: run {
+            Toast.makeText(this, "Failed to generate QR code", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Show QR in dialog
+        val qrDialogView = LayoutInflater.from(this).inflate(R.layout.dialog_qr_code, null)
+        val ivQR = qrDialogView.findViewById<ImageView>(R.id.iv_qr_code)
+        val btnDownload = qrDialogView.findViewById<Button>(R.id.btn_download_qr)
+        val btnClose = qrDialogView.findViewById<Button>(R.id.btn_close_qr)
+
+        ivQR.setImageBitmap(bitmap)
+
+        val qrDialog = AlertDialog.Builder(this)
+            .setTitle("Your QR Code")
+            .setView(qrDialogView)
+            .create()
+
+        btnDownload.setOnClickListener {
+            val uri = saveQRToGallery(bitmap, bookingId)
+            if (uri != null) {
+                Toast.makeText(this, "QR code saved to Pictures/EVBookings", Toast.LENGTH_SHORT).show()
+                qrDialog.dismiss()
+            }
+        }
+
+        btnClose.setOnClickListener { qrDialog.dismiss() }
+
+        qrDialog.show()
+    }
+
+    private fun generateQRCode(data: String, size: Int = 300): Bitmap? {
+        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 1)
+        val bitMatrix: BitMatrix
+        try {
+            bitMatrix = QRCodeWriter().encode(data, BarcodeFormat.QR_CODE, size, size, hints)
+        } catch (e: WriterException) {
+            Log.e("QRCode", "Error generating QR code", e)
+            return null
+        }
+
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
+        for (x in 0 until size) {
+            for (y in 0 until size) {
+                bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
+        return bitmap
+    }
+
+    private fun saveQRToGallery(bitmap: Bitmap, bookingId: String): Uri? {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val filename = "QR_Booking_${bookingId}_$timestamp.png"
+
+        var outputStream: OutputStream? = null
+        var uri: Uri? = null
+        try {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/EVBookings")
+                }
+            }
+
+            val resolver = contentResolver
+            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let { safeUri ->
+                outputStream = resolver.openOutputStream(safeUri)
+                outputStream?.let { safeStream ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, safeStream)
+                    safeStream.close()  // Close immediately after compress to avoid leaks
+                } ?: run {
+                    Log.e("SaveQR", "Failed to open output stream")
+                    Toast.makeText(this, "Failed to open file for writing", Toast.LENGTH_SHORT).show()
+                    return null
+                }
+            } ?: run {
+                Log.e("SaveQR", "Failed to insert URI into MediaStore")
+                Toast.makeText(this, "Failed to create file", Toast.LENGTH_SHORT).show()
+                return null
+            }
+        } catch (e: Exception) {
+            Log.e("SaveQR", "Error saving QR code", e)
+            Toast.makeText(this, "Failed to save QR code", Toast.LENGTH_SHORT).show()
+            return null
+        } finally {
+            // No need for close here since we close inside the let block
+        }
+        return uri
     }
 
     private fun showEditBookingDialog(booking: JSONObject, token: String) {
@@ -186,7 +320,6 @@ class BookingHistoryActivity : AppCompatActivity() {
                 val notes = etNotes.text.toString().trim()
 
                 if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
-                    // FIX: use "id" if "_id" is missing
                     val bookingId = booking.optString("_id", booking.optString("id", ""))
                     if (bookingId.isNotEmpty()) {
                         val duration = calculateDuration(startTime, endTime)

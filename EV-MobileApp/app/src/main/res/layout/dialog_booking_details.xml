@@ -1,208 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:padding="16dp">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/tv_station_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:text="Station Name"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-            app:startIconTint="#1976D2">
+    <TextView
+        android:id="@+id/tv_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Address"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_station_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Station Name"
-                android:enabled="false"
-                android:focusable="false" />
+    <TextView
+        android:id="@+id/tv_date_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Date Time"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+    <TextView
+        android:id="@+id/tv_start_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Time"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_compass"
-            app:startIconTint="#1976D2">
+    <TextView
+        android:id="@+id/tv_end_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="End Time"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_address"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Address"
-                android:enabled="false"
-                android:focusable="false" />
+    <TextView
+        android:id="@+id/tv_duration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Duration"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+    <TextView
+        android:id="@+id/tv_total_cost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total Cost"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_today"
-            app:startIconTint="#1976D2">
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Status"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_date_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Date"
-                android:enabled="false"
-                android:focusable="false" />
+    <TextView
+        android:id="@+id/tv_notes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Notes"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+    <Button
+        android:id="@+id/btn_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit"
+        android:visibility="gone" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_day"
-            app:startIconTint="#1976D2">
+    <Button
+        android:id="@+id/btn_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_start_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Start Time"
-                android:enabled="false"
-                android:focusable="false" />
+    <Button
+        android:id="@+id/btn_generate_qr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Generate QR Code"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
 
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_day"
-            app:startIconTint="#1976D2">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_end_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="End Time"
-                android:enabled="false"
-                android:focusable="false" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@drawable/ic_menu_hour"
-            app:startIconTint="#1976D2">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_duration"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Duration"
-                android:enabled="false"
-                android:focusable="false" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_view"
-            app:startIconTint="#1976D2">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_total_cost"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Total Cost"
-                android:enabled="false"
-                android:focusable="false" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_info_details"
-            app:startIconTint="#1976D2">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Status"
-                android:enabled="false"
-                android:focusable="false" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#B3E5FC"
-            app:startIconDrawable="@android:drawable/ic_menu_edit"
-            app:startIconTint="#1976D2">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/tv_notes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Notes"
-                android:inputType="textMultiLine"
-                android:lines="3"
-                android:enabled="false"
-                android:focusable="false" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end">
-
-            <Button
-                android:id="@+id/btn_edit"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Edit Booking"
-                android:backgroundTint="#2196F3"
-                android:textColor="@android:color/white"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button" />
-
-            <Button
-                android:id="@+id/btn_cancel"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Cancel Booking"
-                android:backgroundTint="#F44336"
-                android:textColor="@android:color/white"
-                style="@style/Widget.MaterialComponents.Button" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</ScrollView>
+</LinearLayout>
