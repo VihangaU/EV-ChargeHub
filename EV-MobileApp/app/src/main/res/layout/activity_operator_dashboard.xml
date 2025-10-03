@@ -7,6 +7,13 @@
     android:background="@drawable/blue_gradient"
     tools:context=".operator.OperatorDashboardActivity">
 
+    <include
+        android:id="@+id/include_app_bar"
+        layout="@layout/include_app_bar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/content_layout"
         android:layout_width="0dp"
@@ -250,7 +257,7 @@
         app:itemTextColor="@color/bottom_nav_text_color"
         app:itemRippleColor="#2196F3"
         app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu"
+        app:menu="@menu/bottom_nav_menu_station"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

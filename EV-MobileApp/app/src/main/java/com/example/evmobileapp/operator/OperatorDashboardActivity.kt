@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
 import com.example.evmobileapp.owner.BookingHistoryActivity
 import com.example.evmobileapp.owner.OwnerDashboardActivity
-import com.example.evmobileapp.owner.ProfileActivity
+import com.example.evmobileapp.operator.OperatorProfileActivity
 import com.example.evmobileapp.owner.ReservationActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
@@ -66,20 +66,16 @@ class OperatorDashboardActivity : AppCompatActivity() {
     private fun setupBottomNavigation() {
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> {
+                R.id.nav_home_station -> {
                     // Already on home for operator
                     true
                 }
-                R.id.nav_reservations -> {
-                    startActivity(Intent(this, ReservationActivity::class.java))
-                    true
-                }
-                R.id.nav_history -> {
+                R.id.nav_bookings_station -> {
                     startActivity(Intent(this, BookingHistoryActivity::class.java))
                     true
                 }
-                R.id.nav_profile -> {
-                    startActivity(Intent(this, ProfileActivity::class.java))
+                R.id.nav_profile_station -> {
+                    startActivity(Intent(this, OperatorProfileActivity::class.java))
                     true
                 }
                 else -> false
