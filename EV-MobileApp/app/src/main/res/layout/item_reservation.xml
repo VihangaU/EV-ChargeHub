@@ -6,42 +6,78 @@
     android:layout_margin="8dp"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="16dp">
 
+        <ImageView
+            android:id="@+id/iv_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="12dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@android:drawable/ic_menu_recent_history" />
+
         <TextView
-            android:id="@+id/reservation_station"
-            android:layout_width="wrap_content"
+            android:id="@+id/tv_station_name"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Station Name"
             android:textColor="#1976D2"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toEndOf="@+id/iv_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tv_status" />
 
         <TextView
-            android:id="@+id/reservation_date_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Date and Time"
-            android:textColor="#424242"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
-
-        <TextView
-            android:id="@+id/reservation_status"
+            android:id="@+id/tv_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Status"
             android:textSize="14sp"
-            android:textStyle="italic"
+            android:textStyle="bold"
             android:textColor="#0277BD"
+            android:background="#E3F2FD"
+            android:padding="4dp"
+            android:minWidth="60dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_address"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Address"
+            android:textColor="#424242"
+            android:textSize="14sp"
+            app:layout_constraintStart_toEndOf="@+id/iv_icon"
+            app:layout_constraintTop_toBottomOf="@+id/tv_station_name"
+            app:layout_constraintEnd_toStartOf="@+id/tv_status"
             android:layout_marginTop="4dp" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/tv_date_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Date and Time"
+            android:textColor="#616161"
+            android:textSize="12sp"
+            app:layout_constraintStart_toEndOf="@+id/iv_icon"
+            app:layout_constraintTop_toBottomOf="@+id/tv_address"
+            app:layout_constraintEnd_toStartOf="@+id/tv_status"
+            android:layout_marginTop="2dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>
