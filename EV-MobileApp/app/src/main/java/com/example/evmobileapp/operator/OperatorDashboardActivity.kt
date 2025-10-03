@@ -46,7 +46,6 @@ class OperatorDashboardActivity : AppCompatActivity() {
         tvActiveBookings = findViewById(R.id.tv_active_bookings)
         tvTotalRevenue = findViewById(R.id.tv_total_revenue)
         tvAvailableSlots = findViewById(R.id.tv_available_slots)
-        confirmButton = findViewById(R.id.confirm_button)
         bottomNavigation = findViewById(R.id.bottom_navigation_operator)
 
         setupBottomNavigation()
@@ -55,12 +54,6 @@ class OperatorDashboardActivity : AppCompatActivity() {
         val token = sessionManager.getToken()
         if (token != null) {
             fetchDashboardData(token)
-        }
-
-        // Handle Confirm button click
-        confirmButton.setOnClickListener {
-            // Handle the booking confirmation logic here (e.g., scan a QR or manually confirm)
-            Toast.makeText(this, "Booking Confirmed!", Toast.LENGTH_SHORT).show()
         }
     }
 

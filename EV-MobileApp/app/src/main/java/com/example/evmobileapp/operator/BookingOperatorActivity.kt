@@ -3,7 +3,12 @@ package com.example.evmobileapp.operator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,12 +22,24 @@ import com.example.evmobileapp.operator.OperatorProfileActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.WriterException
+import com.google.zxing.common.BitMatrix
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanIntentResult
+import com.journeyapps.barcodescanner.ScanOptions
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 class BookingOperatorActivity : AppCompatActivity() {
 
@@ -30,6 +47,18 @@ class BookingOperatorActivity : AppCompatActivity() {
     private lateinit var apiClient: ApiClient
     private lateinit var bookingExpandableListView: ExpandableListView
     private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var btnScanQr: Button
+
+    // Modern scanner launcher
+    private val scanLauncher = registerForActivityResult(ScanContract()) { result: ScanIntentResult? ->
+        if (result?.contents == null) {
+            Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show()
+        } else {
+            val scannedData = result.contents
+            Log.d("QRScan", "Scanned data: $scannedData")
+            parseQRData(scannedData)
+        }
+    }
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,8 +70,10 @@ class BookingOperatorActivity : AppCompatActivity() {
 
         bookingExpandableListView = findViewById(R.id.booking_history_list)
         bottomNavigation = findViewById(R.id.bottom_navigation_history)
+        btnScanQr = findViewById(R.id.btn_scan_qr)
 
         setupBottomNavigation()
+        btnScanQr.setOnClickListener { startQRScan() }
 
         val token = sessionManager.getToken()
         if (token != null) {
@@ -66,6 +97,72 @@ class BookingOperatorActivity : AppCompatActivity() {
             }
         }
         bottomNavigation.selectedItemId = R.id.nav_bookings_station
+    }
+
+    private fun startQRScan() {
+        val options = ScanOptions().apply {
+            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            setPrompt("Scan a QR Code for Booking")
+            setCameraId(0) // Use back camera
+            setBeepEnabled(true)
+            setBarcodeImageEnabled(false)
+        }
+        scanLauncher.launch(options)
+    }
+
+    private fun parseQRData(data: String) {
+        val lines = data.lines()
+        var bookingId = ""
+        lines.forEach { line ->
+            if (line.startsWith("Booking ID:")) {
+                bookingId = line.substringAfter("Booking ID:").trim()
+                return@forEach
+            }
+        }
+        if (bookingId.isNotEmpty()) {
+            fetchBookingById(bookingId)
+        } else {
+            Toast.makeText(this, "Invalid QR Code: Booking ID not found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun fetchBookingById(bookingId: String) {
+        val token = sessionManager.getToken() ?: return
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("http://10.0.2.2:5001/api/bookings/$bookingId")
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val jsonStr = response.body?.string()
+                    val booking = try {
+                        JSONObject(jsonStr)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    runOnUiThread {
+                        if (booking != null) {
+                            showBookingDetails(booking)
+                        } else {
+                            Toast.makeText(this@BookingOperatorActivity, "Invalid booking data", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this@BookingOperatorActivity, "Failed to fetch booking details", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@BookingOperatorActivity, "Network error", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
     }
 
     private fun fetchBookingHistory(token: String) {
@@ -136,6 +233,7 @@ class BookingOperatorActivity : AppCompatActivity() {
         val tvNotes = dialogView.findViewById<TextView>(R.id.tv_notes)
         val btnEdit = dialogView.findViewById<Button>(R.id.btn_edit)
         val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnGenerateQR = dialogView.findViewById<Button>(R.id.btn_generate_qr)
 
         tvStationName.text = booking.optString("stationName", "N/A")
         tvAddress.text = booking.optString("stationAddress", "N/A")
@@ -153,6 +251,7 @@ class BookingOperatorActivity : AppCompatActivity() {
         // Reset visibilities
         btnEdit.visibility = View.GONE
         btnCancel.visibility = View.GONE
+        btnGenerateQR.visibility = View.GONE
 
         val dialog = AlertDialog.Builder(this)
             .setTitle("Booking Details")
@@ -183,6 +282,12 @@ class BookingOperatorActivity : AppCompatActivity() {
                     updateBookingStatus(token, bookingId, "in_progress")
                 }
                 btnEdit.visibility = View.VISIBLE
+
+                btnGenerateQR.visibility = View.VISIBLE
+                btnGenerateQR.setOnClickListener {
+                    dialog.dismiss()
+                    generateAndShowQR(booking)
+                }
             }
             "in_progress" -> {
                 btnEdit.text = "Complete"
@@ -191,9 +296,14 @@ class BookingOperatorActivity : AppCompatActivity() {
                     updateBookingStatus(token, bookingId, "completed")
                 }
                 btnEdit.visibility = View.VISIBLE
+
+                btnGenerateQR.visibility = View.VISIBLE
+                btnGenerateQR.setOnClickListener {
+                    dialog.dismiss()
+                    generateAndShowQR(booking)
+                }
             }
             // For other statuses like completed, cancelled: no actions
-            // Note: Pending is initial status, cannot set back to pending
         }
 
         dialog.show()
@@ -216,7 +326,10 @@ class BookingOperatorActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (response.isSuccessful) {
                         Toast.makeText(this@BookingOperatorActivity, "Booking status updated to $newStatus", Toast.LENGTH_SHORT).show()
-                        refreshBookings(token)
+                        val token = sessionManager.getToken()
+                        if (token != null) {
+                            refreshBookings(token)
+                        }
                     } else {
                         val errorBody = response.body?.string()
                         Log.e("BookingOperator", "Failed to update: ${response.code} - $errorBody")
@@ -231,6 +344,66 @@ class BookingOperatorActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun generateAndShowQR(booking: JSONObject) {
+        val bookingId = booking.optString("_id", booking.optString("id", ""))
+        if (bookingId.isEmpty()) {
+            Toast.makeText(this, "Booking ID not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Build QR data string (include key details, including Booking ID)
+        val qrData = """
+            Booking ID: $bookingId
+            Station: ${booking.optString("stationName", "N/A")}
+            Address: ${booking.optString("stationAddress", "N/A")}
+            Date: ${booking.optString("reservationDate", "N/A")}
+            Time: ${booking.optString("startTime", "N/A")} - ${booking.optString("endTime", "N/A")}
+            Duration: ${booking.optInt("duration", 0)} hours
+            Cost: LKR ${booking.optInt("totalCost", 0)}
+            Status: ${booking.optString("status", "N/A")}
+        """.trimIndent()
+
+        val bitmap = generateQRCode(qrData) ?: run {
+            Toast.makeText(this, "Failed to generate QR code", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Show QR in dialog (no download/save)
+        val qrDialogView = LayoutInflater.from(this).inflate(R.layout.dialog_qr_code, null)
+        val ivQR = qrDialogView.findViewById<ImageView>(R.id.iv_qr_code)
+        val btnClose = qrDialogView.findViewById<Button>(R.id.btn_close_qr)
+
+        ivQR.setImageBitmap(bitmap)
+
+        val qrDialog = AlertDialog.Builder(this)
+            .setTitle("Your QR Code")
+            .setView(qrDialogView)
+            .create()
+
+        btnClose.setOnClickListener { qrDialog.dismiss() }
+
+        qrDialog.show()
+    }
+
+    private fun generateQRCode(data: String, size: Int = 300): Bitmap? {
+        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 1)
+        val bitMatrix: BitMatrix
+        try {
+            bitMatrix = QRCodeWriter().encode(data, BarcodeFormat.QR_CODE, size, size, hints)
+        } catch (e: WriterException) {
+            Log.e("QRCode", "Error generating QR code", e)
+            return null
+        }
+
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
+        for (x in 0 until size) {
+            for (y in 0 until size) {
+                bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
+        return bitmap
     }
 
     private inner class BookingExpandableAdapter(
