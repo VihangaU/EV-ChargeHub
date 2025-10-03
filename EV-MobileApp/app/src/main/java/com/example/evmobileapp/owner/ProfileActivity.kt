@@ -2,6 +2,9 @@ package com.example.evmobileapp.owner
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -9,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
 import com.example.evmobileapp.auth.LoginActivity
+import com.example.evmobileapp.owner.BookingHistoryActivity
 import com.example.evmobileapp.owner.OwnerDashboardActivity
 import com.example.evmobileapp.owner.ReservationActivity
 import com.example.evmobileapp.utils.ApiClient
@@ -17,6 +21,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 
@@ -37,6 +42,8 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var btnDeactivate: MaterialButton
     private lateinit var btnEditProfile: MaterialButton
     private lateinit var btnLogout: MaterialButton
+    private var evOwnerId: String = ""
+    private var userId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,8 +107,7 @@ class ProfileActivity : AppCompatActivity() {
             showDeactivateConfirmation()
         }
         btnEditProfile.setOnClickListener {
-            // TODO: Navigate to EditProfileActivity
-            //startActivity(Intent(this, EditProfileActivity::class.java))
+            showEditProfileDialog()
         }
         btnLogout.setOnClickListener {
             sessionManager.clearSession()
@@ -110,29 +116,56 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun showDeactivateConfirmation() {
-        AlertDialog.Builder(this)
-            .setTitle("Deactivate Account")
-            .setMessage("Are you sure you want to deactivate your account? This action cannot be undone.")
-            .setPositiveButton("Deactivate") { _, _ ->
-                val token = sessionManager.getToken()
-                val userId = sessionManager.getUserId() // Assume SessionManager has getUserId()
-                if (token != null && userId != null) {
-                    deactivateAccount(token, userId.toString())
+    private fun showEditProfileDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_profile, null)
+        val etPhone = dialogView.findViewById<EditText>(R.id.et_phone)
+        val etAddress = dialogView.findViewById<EditText>(R.id.et_address)
+        val etVehicleModel = dialogView.findViewById<EditText>(R.id.et_vehicle_model)
+        val etVehicleNumber = dialogView.findViewById<EditText>(R.id.et_vehicle_number)
+
+        // Pre-fill current values (strip labels if present)
+        etPhone.setText(tvPhone.text.toString().replace("Phone: ", "").trim())
+        etAddress.setText(tvAddress.text.toString().replace("Address: ", "").trim())
+        etVehicleModel.setText(tvVehicleModel.text.toString().replace("Vehicle Model: ", "").trim())
+        etVehicleNumber.setText(tvVehicleNumber.text.toString().replace("Vehicle Number: ", "").trim())
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Edit Profile")
+            .setView(dialogView)
+            .setPositiveButton("Save") { _, _ ->
+                val phone = etPhone.text.toString().trim()
+                val address = etAddress.text.toString().trim()
+                val vehicleModel = etVehicleModel.text.toString().trim()
+                val vehicleNumber = etVehicleNumber.text.toString().trim()
+
+                if (phone.isNotEmpty() && address.isNotEmpty() && vehicleModel.isNotEmpty() && vehicleNumber.isNotEmpty()) {
+                    val token = sessionManager.getToken()
+                    if (token != null && evOwnerId.isNotEmpty()) {
+                        updateProfile(token, evOwnerId, phone, address, vehicleModel, vehicleNumber)
+                    } else {
+                        Toast.makeText(this, "User data not available", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
-            .show()
+            .create()
+
+        dialog.show()
     }
 
-    private fun deactivateAccount(token: String, userId: String) {
+    private fun updateProfile(token: String, evOwnerId: String, phone: String, address: String, vehicleModel: String, vehicleNumber: String) {
         val client = OkHttpClient()
         val json = JSONObject().apply {
-            put("status", "inactive")
+            put("phone", phone)
+            put("address", address)
+            put("vehicleModel", vehicleModel)
+            put("vehicleNumber", vehicleNumber)
         }
-        val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), json.toString())
+        val body = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
-            .url("http://10.0.2.2:5001/api/evowners/$userId")
+            .url("http://10.0.2.2:5001/api/evowners/$evOwnerId")
             .addHeader("Authorization", "Bearer $token")
             .put(body)
             .build()
@@ -141,16 +174,89 @@ class ProfileActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     runOnUiThread {
-                        Toast.makeText(this@ProfileActivity, "Account deactivated successfully", Toast.LENGTH_SHORT).show()
-                        sessionManager.clearSession()
-                        startActivity(Intent(this@ProfileActivity, LoginActivity::class.java))
-                        finish()
+                        Toast.makeText(this@ProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                        fetchProfileData(token) // Refetch to update UI
                     }
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this@ProfileActivity, "Failed to deactivate account", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
                     }
                 }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@ProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+    }
+
+    private fun showDeactivateConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Deactivate Account")
+            .setMessage("Are you sure you want to deactivate your account? This action cannot be undone.")
+            .setPositiveButton("Deactivate") { _, _ ->
+                val token = sessionManager.getToken()
+                if (token != null && evOwnerId.isNotEmpty() && userId.isNotEmpty()) {
+                    deactivateAccount(token, evOwnerId, userId)
+                } else {
+                    Toast.makeText(this, "User data not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun deactivateAccount(token: String, evOwnerId: String, userId: String) {
+        // Update EVOwner status
+        val jsonEV = JSONObject().apply {
+            put("status", "inactive")
+        }
+        val bodyEV = jsonEV.toString().toRequestBody("application/json".toMediaTypeOrNull())
+        val requestEV = Request.Builder()
+            .url("http://10.0.2.2:5001/api/evowners/$evOwnerId")
+            .addHeader("Authorization", "Bearer $token")
+            .put(bodyEV)
+            .build()
+
+        // Update User status
+        val jsonUser = JSONObject().apply {
+            put("status", "inactive")
+        }
+        val bodyUser = jsonUser.toString().toRequestBody("application/json".toMediaTypeOrNull())
+        val requestUser = Request.Builder()
+            .url("http://10.0.2.2:5001/api/users/$userId")
+            .addHeader("Authorization", "Bearer $token")
+            .put(bodyUser)
+            .build()
+
+        val client = OkHttpClient()
+
+        // Execute EVOwner update
+        client.newCall(requestEV).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                // Execute User update regardless of EVOwner response
+                client.newCall(requestUser).enqueue(object : Callback {
+                    override fun onResponse(call: Call, response: Response) {
+                        runOnUiThread {
+                            if (response.isSuccessful) {
+                                Toast.makeText(this@ProfileActivity, "Account deactivated successfully", Toast.LENGTH_SHORT).show()
+                                sessionManager.clearSession()
+                                startActivity(Intent(this@ProfileActivity, LoginActivity::class.java))
+                                finish()
+                            } else {
+                                Toast.makeText(this@ProfileActivity, "Failed to deactivate account", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+
+                    override fun onFailure(call: Call, e: IOException) {
+                        runOnUiThread {
+                            Toast.makeText(this@ProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                })
             }
 
             override fun onFailure(call: Call, e: IOException) {
@@ -173,6 +279,10 @@ class ProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     val jsonResponse = JSONObject(responseBody ?: "{}")
+
+                    evOwnerId = jsonResponse.optString("_id", jsonResponse.optString("id", ""))
+                    val userIdObj = jsonResponse.optJSONObject("userId")
+                    userId = if (userIdObj != null) userIdObj.optString("_id", "") else ""
 
                     runOnUiThread {
                         tvName.text = jsonResponse.optString("name", "N/A")
@@ -198,8 +308,4 @@ class ProfileActivity : AppCompatActivity() {
             }
         })
     }
-}
-
-private fun SessionManager.getUserId() {
-    TODO("Not yet implemented")
 }
