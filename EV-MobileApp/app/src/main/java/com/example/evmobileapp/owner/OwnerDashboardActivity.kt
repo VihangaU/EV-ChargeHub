@@ -12,6 +12,7 @@ import com.example.evmobileapp.owner.ProfileActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 import org.json.JSONObject
 import okhttp3.*
 import java.io.IOException
@@ -20,9 +21,14 @@ class OwnerDashboardActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
-    private lateinit var pendingReservationsText: TextView
-    private lateinit var approvedReservationsText: TextView
+    private lateinit var tvTotalBookings: TextView
+    private lateinit var tvActiveBookings: TextView
+    private lateinit var tvCompletedBookings: TextView
+    private lateinit var tvTotalSpent: TextView
+    private lateinit var tvAvailableStations: TextView
     private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var createReservationButton: MaterialButton
+    private lateinit var viewHistoryButton: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,17 +37,39 @@ class OwnerDashboardActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         apiClient = ApiClient()
 
-        pendingReservationsText = findViewById(R.id.pending_reservations)
-        approvedReservationsText = findViewById(R.id.approved_reservations)
+        tvTotalBookings = findViewById(R.id.tv_total_bookings)
+        tvActiveBookings = findViewById(R.id.tv_active_bookings)
+        tvCompletedBookings = findViewById(R.id.tv_completed_bookings)
+        tvTotalSpent = findViewById(R.id.tv_total_spent)
+        tvAvailableStations = findViewById(R.id.tv_available_stations)
         bottomNavigation = findViewById(R.id.bottom_navigation)
+        createReservationButton = findViewById(R.id.create_reservation_button)
+        viewHistoryButton = findViewById(R.id.view_history_button)
 
         // Set up bottom navigation
         setupBottomNavigation()
+
+        // Set up button clicks
+        createReservationButton.setOnClickListener {
+            startActivity(Intent(this, ReservationActivity::class.java))
+        }
+
+        viewHistoryButton.setOnClickListener {
+            startActivity(Intent(this, BookingHistoryActivity::class.java))
+        }
 
         // Fetch the user data from the backend
         val token = sessionManager.getToken()
         if (token != null) {
             fetchDashboardData(token)
+        } else {
+            runOnUiThread {
+                tvTotalBookings.text = "Total Bookings: 0"
+                tvActiveBookings.text = "Active Bookings: 0"
+                tvCompletedBookings.text = "Completed Bookings: 0"
+                tvTotalSpent.text = "Total Spent: LKR 0"
+                tvAvailableStations.text = "Available Stations: 0"
+            }
         }
     }
 
@@ -83,28 +111,40 @@ class OwnerDashboardActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
-                    val jsonResponse = JSONObject(responseBody!!)
+                    val jsonResponse = JSONObject(responseBody ?: "{}")
 
                     // Use correct field names from dashboard API
                     val totalBookings = jsonResponse.optInt("totalBookings", 0)
                     val activeBookings = jsonResponse.optInt("activeBookings", 0)
+                    val completedBookings = jsonResponse.optInt("completedBookings", 0)
+                    val totalSpent = jsonResponse.optInt("totalSpent", 0)
+                    val availableStations = jsonResponse.optInt("availableStations", 0)
 
                     runOnUiThread {
-                        pendingReservationsText.text = "Total Bookings: $totalBookings"
-                        approvedReservationsText.text = "Active Bookings: $activeBookings"
+                        tvTotalBookings.text = "Total Bookings: $totalBookings"
+                        tvActiveBookings.text = "Active Bookings: $activeBookings"
+                        tvCompletedBookings.text = "Completed Bookings: $completedBookings"
+                        tvTotalSpent.text = "Total Spent: LKR $totalSpent"
+                        tvAvailableStations.text = "Available Stations: $availableStations"
                     }
                 } else {
                     runOnUiThread {
-                        pendingReservationsText.text = "Total Bookings: 0"
-                        approvedReservationsText.text = "Active Bookings: 0"
+                        tvTotalBookings.text = "Total Bookings: 0"
+                        tvActiveBookings.text = "Active Bookings: 0"
+                        tvCompletedBookings.text = "Completed Bookings: 0"
+                        tvTotalSpent.text = "Total Spent: LKR 0"
+                        tvAvailableStations.text = "Available Stations: 0"
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    pendingReservationsText.text = "Total Bookings: 0"
-                    approvedReservationsText.text = "Active Bookings: 0"
+                    tvTotalBookings.text = "Total Bookings: 0"
+                    tvActiveBookings.text = "Active Bookings: 0"
+                    tvCompletedBookings.text = "Completed Bookings: 0"
+                    tvTotalSpent.text = "Total Spent: LKR 0"
+                    tvAvailableStations.text = "Available Stations: 0"
                 }
             }
         })
