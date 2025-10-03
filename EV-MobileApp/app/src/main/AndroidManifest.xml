@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -22,6 +24,11 @@
         android:theme="@style/Theme.EvMobileApp"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCbuUW7FSLBWgaAn_1r92SIDp_Tk7W96lU" />
+
         <activity android:name=".auth.LoginActivity" />
         <activity android:name=".auth.SignupActivity" />
         <activity android:name=".owner.OwnerDashboardActivity" />
@@ -32,6 +39,7 @@
         <activity android:name=".operator.OperatorLoginActivity" />
         <activity android:name=".operator.OperatorProfileActivity" />
         <activity android:name=".operator.BookingOperatorActivity" />
+        <activity android:name=".owner.StationMapActivity" />
 
 
         <activity

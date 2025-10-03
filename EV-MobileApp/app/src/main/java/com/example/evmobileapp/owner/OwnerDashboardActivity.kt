@@ -3,12 +3,8 @@ package com.example.evmobileapp.owner
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
-import com.example.evmobileapp.owner.ReservationActivity
-import com.example.evmobileapp.owner.BookingHistoryActivity
-import com.example.evmobileapp.owner.ProfileActivity
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -29,6 +25,7 @@ class OwnerDashboardActivity : AppCompatActivity() {
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var createReservationButton: MaterialButton
     private lateinit var viewHistoryButton: MaterialButton
+    private lateinit var viewStationMapButton: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +42,7 @@ class OwnerDashboardActivity : AppCompatActivity() {
         bottomNavigation = findViewById(R.id.bottom_navigation)
         createReservationButton = findViewById(R.id.create_reservation_button)
         viewHistoryButton = findViewById(R.id.view_history_button)
+        viewStationMapButton = findViewById(R.id.view_station_map_button)
 
         // Set up bottom navigation
         setupBottomNavigation()
@@ -56,6 +54,10 @@ class OwnerDashboardActivity : AppCompatActivity() {
 
         viewHistoryButton.setOnClickListener {
             startActivity(Intent(this, BookingHistoryActivity::class.java))
+        }
+
+        viewStationMapButton.setOnClickListener {
+            startActivity(Intent(this, StationMapActivity::class.java))
         }
 
         // Fetch the user data from the backend
