@@ -7,6 +7,13 @@
     android:background="@drawable/blue_gradient"
     tools:context=".owner.ProfileActivity">
 
+    <include
+        android:id="@+id/include_app_bar"
+        layout="@layout/include_app_bar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/content_layout"
         android:layout_width="0dp"
