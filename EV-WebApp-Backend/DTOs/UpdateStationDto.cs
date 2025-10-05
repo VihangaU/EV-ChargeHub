@@ -14,19 +14,6 @@ public class UpdateStationDto
 
     public double Longitude { get; set; }
 
-    // [Required]
-    // public string Type { get; set; } = null!;
-
-    // [Required]
-    public int TotalSlots { get; set; }
-
-    // [Required]
-    public int AvailableSlots { get; set; }
-
     [Required]
     public decimal PricePerHour { get; set; }
-
-    public List<string> Amenities { get; set; } = new List<string>();
-
-    // public List<ScheduleSlot>? Schedule { get; set; }
 }

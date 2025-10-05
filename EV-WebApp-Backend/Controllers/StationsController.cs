@@ -150,30 +150,19 @@ public class StationsController : ControllerBase
                 return Forbid();
             }
 
-            // Create updated station object
-            var updatedStation = new Station
-            {
-                Id = existingStation.Id, // Keep existing ID
-                Name = updateDto.Name,
-                Address = updateDto.Address,
-                Latitude = updateDto.Latitude,
-                Longitude = updateDto.Longitude,
-                // Type = updateDto.Type,
-                TotalSlots = updateDto.TotalSlots,
-                AvailableSlots = updateDto.AvailableSlots,
-                PricePerHour = updateDto.PricePerHour,
-                Amenities = updateDto.Amenities,
-                // Schedule = updateDto.Schedule,
+            // Update only specific fields using MongoDB Update operations
+            var update = Builders<Station>.Update
+                .Set(s => s.Name, updateDto.Name)
+                .Set(s => s.Address, updateDto.Address)
+                .Set(s => s.Latitude, updateDto.Latitude)
+                .Set(s => s.Longitude, updateDto.Longitude)
+                .Set(s => s.PricePerHour, updateDto.PricePerHour)
+                .Set(s => s.UpdatedAt, DateTime.UtcNow);
 
-                // Preserve backend-managed fields
-                OperatorId = existingStation.OperatorId,
-                OperatorName = existingStation.OperatorName,
-                Status = existingStation.Status,
-                CreatedAt = existingStation.CreatedAt,
-                UpdatedAt = DateTime.UtcNow
-            };
+            await stations.UpdateOneAsync(s => s.Id == id, update);
 
-            await stations.ReplaceOneAsync(s => s.Id == id, updatedStation);
+            // Fetch the updated station to return
+            var updatedStation = await stations.Find(s => s.Id == id).FirstOrDefaultAsync();
 
             return Ok(new { message = "Station updated successfully", station = updatedStation });
         }
