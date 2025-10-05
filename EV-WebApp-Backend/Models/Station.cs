@@ -5,6 +5,9 @@ namespace EV_WebApp_Backend.Models;
 
 public class ScheduleSlot
 {
+    [BsonElement("id")]
+    public string Id { get; set; } = null!;
+
     [BsonElement("day")]
     public string Day { get; set; } = null!;
 

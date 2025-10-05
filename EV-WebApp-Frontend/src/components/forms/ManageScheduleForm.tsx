@@ -31,7 +31,7 @@ interface ManageScheduleFormProps {
 const ManageScheduleForm: React.FC<ManageScheduleFormProps> = ({ station, isOpen, onClose, onScheduleUpdated }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Initialize with mock schedule data
   const [scheduleSlots, setScheduleSlots] = useState<ScheduleSlot[]>([
     {
@@ -104,13 +104,13 @@ const ManageScheduleForm: React.FC<ManageScheduleFormProps> = ({ station, isOpen
   }
 
   const updateScheduleSlot = (id: string, field: keyof ScheduleSlot, value: any) => {
-    setScheduleSlots(prev => prev.map(slot => 
+    setScheduleSlots(prev => prev.map(slot =>
       slot.id === id ? { ...slot, [field]: value } : slot
     ));
   };
 
   const toggleSlotActive = (id: string) => {
-    setScheduleSlots(prev => prev.map(slot => 
+    setScheduleSlots(prev => prev.map(slot =>
       slot.id === id ? { ...slot, isActive: !slot.isActive } : slot
     ));
   };
@@ -130,11 +130,11 @@ const ManageScheduleForm: React.FC<ManageScheduleFormProps> = ({ station, isOpen
   const removeCustomSlot = (id: string) => {
     setScheduleSlots(prev => prev.filter(slot => slot.id !== id));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Validate schedule slots
     const invalidSlots = scheduleSlots.filter(slot => {
       if (!slot.isActive) return false;
@@ -150,12 +150,22 @@ const ManageScheduleForm: React.FC<ManageScheduleFormProps> = ({ station, isOpen
       setIsLoading(false);
       return;
     }
-    
+
     try {
       if (!station) return;
-      
-      const response = await apiService.updateStationSchedule(station.id, scheduleSlots);
-      
+
+      // Transform the schedule data to match the backend expected format
+      const scheduleData = scheduleSlots.map(slot => ({
+        id: slot.id,
+        day: slot.day,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        availableSlots: slot.availableSlots,
+        isActive: slot.isActive
+      }));
+
+      const response = await apiService.updateStationSchedule(station.id, scheduleData);
+
       toast({
         title: "Schedule Updated",
         description: `Schedule for ${station.name} has been updated successfully.`,
@@ -253,7 +263,7 @@ const ManageScheduleForm: React.FC<ManageScheduleFormProps> = ({ station, isOpen
                         />
                       </div>
                     </div>
-                    
+
                     {/* Remove button for custom slots */}
                     {scheduleSlots.filter(s => s.day === slot.day).length > 1 && (
                       <Button

@@ -155,7 +155,7 @@ class ApiService {
   async updateStationSchedule(id: string, schedule: any[]) {
     return this.request<{ message: string; station: any }>(`/stations/${id}/schedule`, {
       method: 'PUT',
-      body: JSON.stringify({ schedule }),
+      body: JSON.stringify(schedule),
     });
   }
 
