@@ -49,7 +49,7 @@ public class Station
     public int AvailableSlots { get; set; }
 
     [BsonElement("operatorId")]
-    [BsonRepresentation(BsonType.ObjectId)]  // Add this attribute
+    [BsonRepresentation(BsonType.ObjectId)]
     public string OperatorId { get; set; } = null!;
 
     [BsonElement("operatorName")]

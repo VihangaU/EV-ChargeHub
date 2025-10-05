@@ -10,6 +10,7 @@ public class EVOwner
     public string Id { get; set; } = null!;
 
     [BsonElement("userId")]
+    [BsonRepresentation(BsonType.ObjectId)]
     public string UserId { get; set; } = null!;
 
     [BsonElement("nic")]
@@ -35,4 +36,13 @@ public class EVOwner
 
     [BsonElement("status")]
     public string Status { get; set; } = "active";
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("__v")]
+    public int Version { get; set; }
 }
