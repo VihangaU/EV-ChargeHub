@@ -81,7 +81,7 @@ public class StationsController : ControllerBase
     // POST: api/stations
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> CreateStation([FromBody] Station station)
+    public async Task<IActionResult> CreateStation([FromBody] CreateStationDto stationDto)
     {
         try
         {
@@ -94,10 +94,26 @@ public class StationsController : ControllerBase
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Station Operator";
 
-            station.OperatorId = userId!;
-            station.OperatorName = userName;
-            station.CreatedAt = DateTime.UtcNow;
-            station.UpdatedAt = DateTime.UtcNow;
+            // Create the Station object from DTO and add backend-managed fields
+            var station = new Station
+            {
+                Name = stationDto.Name,
+                Address = stationDto.Address,
+                Latitude = stationDto.Latitude,
+                Longitude = stationDto.Longitude,
+                Type = stationDto.Type,
+                TotalSlots = stationDto.TotalSlots,
+                AvailableSlots = stationDto.TotalSlots, // Set available slots equal to total slots initially
+                PricePerHour = stationDto.PricePerHour,
+                Amenities = stationDto.Amenities,
+
+                // Backend-managed fields
+                OperatorId = userId!,
+                OperatorName = userName,
+                Status = "active",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             var stations = _mongoService.GetCollection<Station>("stations");
             await stations.InsertOneAsync(station);

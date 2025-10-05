@@ -50,10 +50,10 @@ public class Station
 
     [BsonElement("operatorId")]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string OperatorId { get; set; } = null!;
+    public string? OperatorId { get; set; } // Make nullable
 
     [BsonElement("operatorName")]
-    public string OperatorName { get; set; } = null!;
+    public string? OperatorName { get; set; } // Make nullable
 
     [BsonElement("status")]
     public string Status { get; set; } = "active";
