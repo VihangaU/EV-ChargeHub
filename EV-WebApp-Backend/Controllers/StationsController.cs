@@ -92,7 +92,11 @@ public class StationsController : ControllerBase
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Station Operator";
+
+            // Fetch the actual user name from the database
+            var users = _mongoService.GetCollection<User>("users");
+            var user = await users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+            var userName = user?.Name ?? "Station Officer";
 
             // Create the Station object from DTO and add backend-managed fields
             var station = new Station

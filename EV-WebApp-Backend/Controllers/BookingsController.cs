@@ -116,7 +116,7 @@ public class BookingsController : ControllerBase
 
     // POST: api/bookings
     [HttpPost]
-    public async Task<IActionResult> CreateBooking([FromBody] Booking booking)
+    public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto bookingDto)
     {
         try
         {
@@ -136,7 +136,7 @@ public class BookingsController : ControllerBase
             }
 
             var stations = _mongoService.GetCollection<Station>("stations");
-            var station = await stations.Find(s => s.Id == booking.StationId).FirstOrDefaultAsync();
+            var station = await stations.Find(s => s.Id == bookingDto.StationId).FirstOrDefaultAsync();
 
             if (station == null)
             {
@@ -148,16 +148,27 @@ public class BookingsController : ControllerBase
                 return BadRequest(new { message = "No available slots at this station" });
             }
 
-            // Calculate total cost
-            booking.TotalCost = booking.Duration * station.PricePerHour;
-            booking.EVOwnerId = evOwner.Id;
-            booking.EVOwnerName = evOwner.Name;
-            booking.EVOwnerNIC = evOwner.NIC;
-            booking.StationName = station.Name;
-            booking.StationAddress = station.Address;
-            booking.Status = "pending";
-            booking.CreatedAt = DateTime.UtcNow;
-            booking.UpdatedAt = DateTime.UtcNow;
+            // Create booking with all required fields
+            var booking = new Booking
+            {
+                StationId = bookingDto.StationId,
+                ReservationDate = bookingDto.ReservationDate,
+                StartTime = bookingDto.StartTime,
+                EndTime = bookingDto.EndTime,
+                Duration = bookingDto.Duration,
+                TotalCost = bookingDto.TotalCost,
+                Notes = bookingDto.Notes,
+
+                // Backend-managed fields
+                EVOwnerId = evOwner.Id,
+                EVOwnerName = evOwner.Name,
+                EVOwnerNIC = evOwner.NIC,
+                StationName = station.Name,
+                StationAddress = station.Address,
+                Status = "pending",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             var bookings = _mongoService.GetCollection<Booking>("bookings");
             await bookings.InsertOneAsync(booking);
@@ -248,7 +259,7 @@ public class BookingsController : ControllerBase
 
     // PUT: api/bookings/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateBooking(string id, [FromBody] Booking updatedBooking)
+    public async Task<IActionResult> UpdateBooking(string id, [FromBody] UpdateBookingDto updateDto)
     {
         try
         {
@@ -282,23 +293,39 @@ public class BookingsController : ControllerBase
                 return StatusCode(403, new { message = "Access denied" });
             }
 
-            // Recalculate total cost if duration changed
-            if (updatedBooking.Duration != existingBooking.Duration && station != null)
+            // Update only the provided fields using MongoDB Update operations
+            var updateDefinitionBuilder = Builders<Booking>.Update;
+            var updates = new List<UpdateDefinition<Booking>>();
+
+            if (!string.IsNullOrEmpty(updateDto.ReservationDate))
+                updates.Add(updateDefinitionBuilder.Set(b => b.ReservationDate, updateDto.ReservationDate));
+
+            if (!string.IsNullOrEmpty(updateDto.StartTime))
+                updates.Add(updateDefinitionBuilder.Set(b => b.StartTime, updateDto.StartTime));
+
+            if (!string.IsNullOrEmpty(updateDto.EndTime))
+                updates.Add(updateDefinitionBuilder.Set(b => b.EndTime, updateDto.EndTime));
+
+            if (updateDto.Duration > 0)
+                updates.Add(updateDefinitionBuilder.Set(b => b.Duration, updateDto.Duration));
+
+            if (updateDto.TotalCost > 0)
+                updates.Add(updateDefinitionBuilder.Set(b => b.TotalCost, updateDto.TotalCost));
+
+            if (updateDto.Notes != null)
+                updates.Add(updateDefinitionBuilder.Set(b => b.Notes, updateDto.Notes));
+
+            // Always update the UpdatedAt field
+            updates.Add(updateDefinitionBuilder.Set(b => b.UpdatedAt, DateTime.UtcNow));
+
+            if (updates.Count > 1) // More than just UpdatedAt
             {
-                updatedBooking.TotalCost = updatedBooking.Duration * station.PricePerHour;
+                var combinedUpdate = updateDefinitionBuilder.Combine(updates);
+                await bookings.UpdateOneAsync(b => b.Id == id, combinedUpdate);
             }
 
-            // Preserve original values that shouldn't be changed
-            updatedBooking.EVOwnerId = existingBooking.EVOwnerId;
-            updatedBooking.EVOwnerName = existingBooking.EVOwnerName;
-            updatedBooking.EVOwnerNIC = existingBooking.EVOwnerNIC;
-            updatedBooking.StationId = existingBooking.StationId;
-            updatedBooking.StationName = existingBooking.StationName;
-            updatedBooking.StationAddress = existingBooking.StationAddress;
-            updatedBooking.CreatedAt = existingBooking.CreatedAt;
-            updatedBooking.UpdatedAt = DateTime.UtcNow;
-
-            await bookings.ReplaceOneAsync(b => b.Id == id, updatedBooking);
+            // Fetch and return the updated booking
+            var updatedBooking = await bookings.Find(b => b.Id == id).FirstOrDefaultAsync();
 
             return Ok(new { message = "Booking updated successfully", booking = updatedBooking });
         }
