@@ -130,7 +130,7 @@ public class StationsController : ControllerBase
     // PUT: api/stations/{id}
     [Authorize]
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateStation(string id, [FromBody] Station updatedStation)
+    public async Task<IActionResult> UpdateStation(string id, [FromBody] UpdateStationDto updateDto)
     {
         try
         {
@@ -150,9 +150,28 @@ public class StationsController : ControllerBase
                 return Forbid();
             }
 
-            updatedStation.OperatorId = existingStation.OperatorId;
-            updatedStation.OperatorName = existingStation.OperatorName;
-            updatedStation.UpdatedAt = DateTime.UtcNow;
+            // Create updated station object
+            var updatedStation = new Station
+            {
+                Id = existingStation.Id, // Keep existing ID
+                Name = updateDto.Name,
+                Address = updateDto.Address,
+                Latitude = updateDto.Latitude,
+                Longitude = updateDto.Longitude,
+                // Type = updateDto.Type,
+                TotalSlots = updateDto.TotalSlots,
+                AvailableSlots = updateDto.AvailableSlots,
+                PricePerHour = updateDto.PricePerHour,
+                Amenities = updateDto.Amenities,
+                // Schedule = updateDto.Schedule,
+
+                // Preserve backend-managed fields
+                OperatorId = existingStation.OperatorId,
+                OperatorName = existingStation.OperatorName,
+                Status = existingStation.Status,
+                CreatedAt = existingStation.CreatedAt,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             await stations.ReplaceOneAsync(s => s.Id == id, updatedStation);
 
