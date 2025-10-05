@@ -194,7 +194,7 @@ public class EVOwnersController : ControllerBase
 
     // PUT: api/evowners/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEVOwner(string id, [FromBody] EVOwner updatedEVOwner)
+    public async Task<IActionResult> UpdateEVOwner(string id, [FromBody] UpdateEVOwnerDto updateDto)
     {
         try
         {
@@ -217,32 +217,30 @@ public class EVOwnersController : ControllerBase
                 return Forbid();
             }
 
-            // Check unique constraints
-            if (updatedEVOwner.NIC != existingEVOwner.NIC)
-            {
-                var nicExists = await evOwners.Find(e => e.NIC == updatedEVOwner.NIC && e.Id != id).AnyAsync();
-                if (nicExists)
-                {
-                    return BadRequest(new { message = "NIC already exists" });
-                }
-            }
-
-            if (updatedEVOwner.VehicleNumber.ToUpper() != existingEVOwner.VehicleNumber)
+            // Check unique constraints for vehicle number if it's being changed
+            if (updateDto.VehicleNumber.ToUpper() != existingEVOwner.VehicleNumber)
             {
                 var vehicleExists = await evOwners.Find(e =>
-                    e.VehicleNumber == updatedEVOwner.VehicleNumber.ToUpper() && e.Id != id).AnyAsync();
+                    e.VehicleNumber == updateDto.VehicleNumber.ToUpper() && e.Id != id).AnyAsync();
                 if (vehicleExists)
                 {
                     return BadRequest(new { message = "Vehicle number already exists" });
                 }
             }
 
-            // Preserve original values
-            updatedEVOwner.UserId = existingEVOwner.UserId;
-            updatedEVOwner.VehicleNumber = updatedEVOwner.VehicleNumber.ToUpper();
+            // Update only the specific fields using MongoDB Update operations
+            var update = Builders<EVOwner>.Update
+                .Set(e => e.Name, updateDto.Name)
+                .Set(e => e.Phone, updateDto.Phone)
+                .Set(e => e.Address, updateDto.Address)
+                .Set(e => e.VehicleModel, updateDto.VehicleModel)
+                .Set(e => e.VehicleNumber, updateDto.VehicleNumber.ToUpper())
+                .Set(e => e.UpdatedAt, DateTime.UtcNow);
 
-            await evOwners.ReplaceOneAsync(e => e.Id == id, updatedEVOwner);
+            await evOwners.UpdateOneAsync(e => e.Id == id, update);
 
+            // Fetch the updated EV Owner to return
+            var updatedEVOwner = await evOwners.Find(e => e.Id == id).FirstOrDefaultAsync();
             var users = _mongoService.GetCollection<User>("users");
             var user = await users.Find(u => u.Id == updatedEVOwner.UserId).FirstOrDefaultAsync();
 
@@ -275,7 +273,7 @@ public class EVOwnersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Error updating EV owner", error = ex.Message });
+            return StatusCode(500, new { message = "Error updating EV Owner", error = ex.Message });
         }
     }
 
