@@ -198,7 +198,7 @@ class ProfileActivity : AppCompatActivity() {
             .setMessage("Are you sure you want to deactivate your account? This action cannot be undone.")
             .setPositiveButton("Deactivate") { _, _ ->
                 val token = sessionManager.getToken()
-                if (token != null && evOwnerId.isNotEmpty() && userId.isNotEmpty()) {
+                if (token != null) {
                     deactivateAccount(token, evOwnerId, userId)
                 } else {
                     Toast.makeText(this, "User data not available", Toast.LENGTH_SHORT).show()
@@ -215,21 +215,21 @@ class ProfileActivity : AppCompatActivity() {
         }
         val bodyEV = jsonEV.toString().toRequestBody("application/json".toMediaTypeOrNull())
         val requestEV = Request.Builder()
-            .url("http://10.0.2.2:5001/api/evowners/$evOwnerId")
+            .url("http://10.0.2.2:5001/api/evowners/$evOwnerId/status")
             .addHeader("Authorization", "Bearer $token")
             .put(bodyEV)
             .build()
 
         // Update User status
-        val jsonUser = JSONObject().apply {
-            put("status", "inactive")
-        }
-        val bodyUser = jsonUser.toString().toRequestBody("application/json".toMediaTypeOrNull())
-        val requestUser = Request.Builder()
-            .url("http://10.0.2.2:5001/api/users/$userId")
-            .addHeader("Authorization", "Bearer $token")
-            .put(bodyUser)
-            .build()
+//        val jsonUser = JSONObject().apply {
+//            put("status", "inactive")
+//        }
+//        val bodyUser = jsonUser.toString().toRequestBody("application/json".toMediaTypeOrNull())
+//        val requestUser = Request.Builder()
+//            .url("http://10.0.2.2:5001/api/users/$userId")
+//            .addHeader("Authorization", "Bearer $token")
+//            .put(bodyUser)
+//            .build()
 
         val client = OkHttpClient()
 
@@ -237,7 +237,7 @@ class ProfileActivity : AppCompatActivity() {
         client.newCall(requestEV).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 // Execute User update regardless of EVOwner response
-                client.newCall(requestUser).enqueue(object : Callback {
+                client.newCall(requestEV).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
                         runOnUiThread {
                             if (response.isSuccessful) {

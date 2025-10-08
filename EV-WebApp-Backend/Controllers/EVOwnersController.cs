@@ -283,10 +283,10 @@ public class EVOwnersController : ControllerBase
         try
         {
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole != "backoffice")
-            {
-                return Forbid();
-            }
+            // if (userRole != "backoffice")
+            // {
+            //     return Forbid();
+            // }
 
             var evOwners = _mongoService.GetCollection<EVOwner>("evowners");
             var evOwner = await evOwners.Find(e => e.Id == id).FirstOrDefaultAsync();
