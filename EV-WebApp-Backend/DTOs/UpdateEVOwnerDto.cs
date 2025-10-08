@@ -4,8 +4,6 @@ namespace EV_WebApp_Backend.DTOs;
 
 public class UpdateEVOwnerDto
 {
-    [Required]
-    public string Name { get; set; } = null!;
 
     [Required]
     public string Phone { get; set; } = null!;

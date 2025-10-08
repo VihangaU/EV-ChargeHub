@@ -230,7 +230,6 @@ public class EVOwnersController : ControllerBase
 
             // Update only the specific fields using MongoDB Update operations
             var update = Builders<EVOwner>.Update
-                .Set(e => e.Name, updateDto.Name)
                 .Set(e => e.Phone, updateDto.Phone)
                 .Set(e => e.Address, updateDto.Address)
                 .Set(e => e.VehicleModel, updateDto.VehicleModel)
