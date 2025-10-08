@@ -11,5 +11,6 @@
     app:title="EV Charging Hub"
     app:titleTextColor="@android:color/white"
     app:titleCentered="false"
-    app:titleTextAppearance="@style/TextAppearance.AppCompat.Medium"
-    app:menu="@menu/top_app_bar_menu" />
+    app:titleTextAppearance="@style/TextAppearance.AppCompat.Medium" />
+<!--    app:menu="@menu/top_app_bar_menu"-->
+

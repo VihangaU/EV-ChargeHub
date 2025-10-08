@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
@@ -227,9 +228,9 @@ class BookingHistoryActivity : AppCompatActivity() {
             .create()
 
         btnDownload.setOnClickListener {
-            val uri = saveQRToGallery(bitmap, bookingId)
+            val uri = saveQRToDownloads(bitmap, bookingId)
             if (uri != null) {
-                Toast.makeText(this, "QR code saved to Pictures/EVBookings", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "QR code saved to Downloads/EVBookings", Toast.LENGTH_SHORT).show()
                 qrDialog.dismiss()
             }
         }
@@ -258,7 +259,8 @@ class BookingHistoryActivity : AppCompatActivity() {
         return bitmap
     }
 
-    private fun saveQRToGallery(bitmap: Bitmap, bookingId: String): Uri? {
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun saveQRToDownloads(bitmap: Bitmap, bookingId: String): Uri? {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val filename = "QR_Booking_${bookingId}_$timestamp.png"
 
@@ -268,20 +270,30 @@ class BookingHistoryActivity : AppCompatActivity() {
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                 put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)  // Required for Downloads to reserve the slot
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/EVBookings")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/EVBookings")
                 }
             }
 
             val resolver = contentResolver
-            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            Log.d("SaveQR", "Inserted URI: $uri for filename: $filename")
 
             uri?.let { safeUri ->
                 outputStream = resolver.openOutputStream(safeUri)
-                outputStream?.let { safeStream ->
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, safeStream)
-                    safeStream.close()  // Close immediately after compress to avoid leaks
-                } ?: run {
+                if (outputStream != null) {
+                    Log.d("SaveQR", "Opened output stream successfully")
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                    outputStream?.close()
+
+                    // Mark as complete so it's visible in Downloads
+                    val updateValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    }
+                    val updated = resolver.update(safeUri, updateValues, null, null)
+                    Log.d("SaveQR", "Updated IS_PENDING to 0: $updated rows affected")
+                } else {
                     Log.e("SaveQR", "Failed to open output stream")
                     Toast.makeText(this, "Failed to open file for writing", Toast.LENGTH_SHORT).show()
                     return null
@@ -292,12 +304,13 @@ class BookingHistoryActivity : AppCompatActivity() {
                 return null
             }
         } catch (e: Exception) {
-            Log.e("SaveQR", "Error saving QR code", e)
-            Toast.makeText(this, "Failed to save QR code", Toast.LENGTH_SHORT).show()
+            Log.e("SaveQR", "Error saving QR code to Downloads", e)
+            Toast.makeText(this, "Failed to save QR code: ${e.message}", Toast.LENGTH_SHORT).show()
             return null
         } finally {
-            // No need for close here since we close inside the let block
+            outputStream?.close()
         }
+        Log.d("SaveQR", "QR saved successfully to Downloads/EVBookings/$filename")
         return uri
     }
 
