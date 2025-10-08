@@ -85,9 +85,14 @@ class OperatorProfileActivity : AppCompatActivity() {
             val decodedBytes = Base64.decode(normalizedPayload, Base64.URL_SAFE)
             val jsonPayload = String(decodedBytes)
 
-            // Parse JSON to get sub or userId (assuming 'sub' is the user ID claim)
+            // Log for debugging (remove after fixing)
+            Log.d("TokenDecode", "Full payload: $jsonPayload")
+
+            // Parse JSON to get nameid (from ClaimTypes.NameIdentifier) or fallback to sub/userId
             val jsonObject = JSONObject(jsonPayload)
-            jsonObject.optString("sub", null) ?: jsonObject.optString("userId", null)
+            jsonObject.optString("nameid", null) ?:
+            jsonObject.optString("sub", null) ?:
+            jsonObject.optString("userId", null)
         } catch (e: Exception) {
             Log.e("TokenDecode", "Error decoding token", e)
             null

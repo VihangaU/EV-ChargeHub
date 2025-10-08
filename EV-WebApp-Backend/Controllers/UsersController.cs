@@ -78,6 +78,9 @@ public class UsersController : ControllerBase
                 return Forbid();
             }
 
+            // Remove password from response
+            user.Password = string.Empty;
+
             return Ok(user);
         }
         catch (Exception ex)
@@ -119,6 +122,9 @@ public class UsersController : ControllerBase
 
             await users.InsertOneAsync(user);
 
+            // Remove password from response
+            user.Password = string.Empty;
+
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
         }
         catch (Exception ex)
@@ -129,7 +135,7 @@ public class UsersController : ControllerBase
 
     // PUT: api/users/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
+    public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto updateDto)
     {
         try
         {
@@ -153,33 +159,53 @@ public class UsersController : ControllerBase
             // Non-backoffice users cannot change role or status
             if (userRole != "backoffice")
             {
-                updatedUser.Role = existingUser.Role;
-                updatedUser.Status = existingUser.Status;
+                updateDto.Role = null;
+                updateDto.Status = null;
             }
 
             // Check email uniqueness if updating email
-            if (updatedUser.Email != existingUser.Email)
+            if (updateDto.Email != null && updateDto.Email != existingUser.Email)
             {
-                var emailExists = await users.Find(u => u.Email == updatedUser.Email && u.Id != id).AnyAsync();
+                var emailExists = await users.Find(u => u.Email == updateDto.Email && u.Id != id).AnyAsync();
                 if (emailExists)
                 {
                     return BadRequest(new { message = "Email already exists" });
                 }
             }
 
-            // Hash password if it's being updated
-            if (!string.IsNullOrEmpty(updatedUser.Password))
+            // Build update operations for provided fields only
+            var update = Builders<User>.Update.Set(u => u.UpdatedAt, DateTime.UtcNow);
+
+            if (updateDto.Name != null)
             {
-                updatedUser.Password = BCrypt.Net.BCrypt.HashPassword(updatedUser.Password);
+                update = update.Set(u => u.Name, updateDto.Name);
             }
-            else
+            if (updateDto.Email != null)
             {
-                // Keep existing password if not updating
-                updatedUser.Password = existingUser.Password;
+                update = update.Set(u => u.Email, updateDto.Email);
+            }
+            if (updateDto.Role != null)
+            {
+                update = update.Set(u => u.Role, updateDto.Role);
+            }
+            if (updateDto.Status != null)
+            {
+                update = update.Set(u => u.Status, updateDto.Status);
+            }
+            if (!string.IsNullOrEmpty(updateDto.Password))
+            {
+                update = update.Set(u => u.Password, BCrypt.Net.BCrypt.HashPassword(updateDto.Password));
             }
 
-            updatedUser.UpdatedAt = DateTime.UtcNow;
-            await users.ReplaceOneAsync(u => u.Id == id, updatedUser);
+            var result = await users.UpdateOneAsync(u => u.Id == id, update);
+
+            if (result.MatchedCount == 0)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Fetch the updated user
+            var updatedUser = await users.Find(u => u.Id == id).FirstOrDefaultAsync();
 
             // Remove password from response
             updatedUser.Password = string.Empty;
@@ -217,6 +243,10 @@ public class UsersController : ControllerBase
             }
 
             var updatedUser = await users.Find(u => u.Id == id).FirstOrDefaultAsync();
+
+            // Remove password from response
+            updatedUser.Password = string.Empty;
+
             return Ok(new { message = "User status updated successfully", user = updatedUser });
         }
         catch (Exception ex)
