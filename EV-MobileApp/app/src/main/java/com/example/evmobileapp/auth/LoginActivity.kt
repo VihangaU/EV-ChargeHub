@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView // 1. Import TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
@@ -29,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
         val email: EditText = findViewById(R.id.email)
         val password: EditText = findViewById(R.id.password)
         val loginButton: Button = findViewById(R.id.login_button)
+        // 2. Find the new TextView by its ID
+        val signupLink: TextView = findViewById(R.id.signup_link)
 
         sessionManager = SessionManager(this)
         apiClient = ApiClient()
@@ -42,6 +45,13 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // 3. Set an OnClickListener for the sign-up link
+        signupLink.setOnClickListener {
+            // Create an Intent to start SignupActivity
+            val intent = Intent(this, SignupActivity::class.java)
+            startActivity(intent)
         }
     }
 

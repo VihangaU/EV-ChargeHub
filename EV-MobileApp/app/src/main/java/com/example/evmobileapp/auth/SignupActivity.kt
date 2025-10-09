@@ -1,8 +1,10 @@
 package com.example.evmobileapp.auth
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
@@ -30,6 +32,7 @@ class SignupActivity : AppCompatActivity() {
         val vehicleModel: EditText = findViewById(R.id.vehicle_model)
         val vehicleNumber: EditText = findViewById(R.id.vehicle_number)
         val registerButton: Button = findViewById(R.id.register_button)
+        val loginLink: TextView = findViewById(R.id.login_link) // Find the TextView
 
         apiClient = ApiClient()
 
@@ -48,6 +51,12 @@ class SignupActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // Set OnClickListener for the login link
+        loginLink.setOnClickListener {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -74,7 +83,10 @@ class SignupActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     runOnUiThread {
                         Toast.makeText(this@SignupActivity, "Registration Successful", Toast.LENGTH_SHORT).show()
-                        finish()
+                        // Navigate to LoginActivity after successful registration
+                        val intent = Intent(this@SignupActivity, LoginActivity::class.java)
+                        startActivity(intent)
+                        finish() // Finish SignupActivity so the user can't go back to it
                     }
                 } else {
                     runOnUiThread {

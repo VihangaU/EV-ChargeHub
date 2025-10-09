@@ -66,11 +66,17 @@ class OwnerDashboardActivity : AppCompatActivity() {
             fetchDashboardData(token)
         } else {
             runOnUiThread {
-                tvTotalBookings.text = "Total Bookings: 0"
-                tvActiveBookings.text = "Active Bookings: 0"
-                tvCompletedBookings.text = "Completed Bookings: 0"
-                tvTotalSpent.text = "Total Spent: LKR 0"
-                tvAvailableStations.text = "Available Stations: 0"
+                tvTotalBookings.text = "0"
+                tvActiveBookings.text = "0"
+                tvCompletedBookings.text = "0"
+                tvTotalSpent.text = "0"
+                tvAvailableStations.text = "0"
+                val statColor = resources.getColor(R.color.blue_primary, null)
+                tvTotalBookings.setTextColor(statColor)
+                tvActiveBookings.setTextColor(statColor)
+                tvCompletedBookings.setTextColor(statColor)
+                tvTotalSpent.setTextColor(statColor)
+                tvAvailableStations.setTextColor(statColor)
             }
         }
     }
@@ -123,30 +129,49 @@ class OwnerDashboardActivity : AppCompatActivity() {
                     val availableStations = jsonResponse.optInt("availableStations", 0)
 
                     runOnUiThread {
-                        tvTotalBookings.text = "Total Bookings: $totalBookings"
-                        tvActiveBookings.text = "Active Bookings: $activeBookings"
-                        tvCompletedBookings.text = "Completed Bookings: $completedBookings"
-                        tvTotalSpent.text = "Total Spent: LKR $totalSpent"
-                        tvAvailableStations.text = "Available Stations: $availableStations"
+                        tvTotalBookings.text = totalBookings.toString()
+                        tvActiveBookings.text = activeBookings.toString()
+                        tvCompletedBookings.text = completedBookings.toString()
+                        tvTotalSpent.text = totalSpent.toString()
+                        tvAvailableStations.text = availableStations.toString()
+                        // Optionally set text color if not set in XML:
+                        val statColor = resources.getColor(R.color.blue_primary, null)
+                        tvTotalBookings.setTextColor(statColor)
+                        tvActiveBookings.setTextColor(statColor)
+                        tvCompletedBookings.setTextColor(statColor)
+                        tvTotalSpent.setTextColor(statColor)
+                        tvAvailableStations.setTextColor(statColor)
                     }
                 } else {
                     runOnUiThread {
-                        tvTotalBookings.text = "Total Bookings: 0"
-                        tvActiveBookings.text = "Active Bookings: 0"
-                        tvCompletedBookings.text = "Completed Bookings: 0"
-                        tvTotalSpent.text = "Total Spent: LKR 0"
-                        tvAvailableStations.text = "Available Stations: 0"
+                        tvTotalBookings.text = "0"
+                        tvActiveBookings.text = "0"
+                        tvCompletedBookings.text = "0"
+                        tvTotalSpent.text = "0"
+                        tvAvailableStations.text = "0"
+                        val statColor = resources.getColor(R.color.blue_primary, null)
+                        tvTotalBookings.setTextColor(statColor)
+                        tvActiveBookings.setTextColor(statColor)
+                        tvCompletedBookings.setTextColor(statColor)
+                        tvTotalSpent.setTextColor(statColor)
+                        tvAvailableStations.setTextColor(statColor)
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    tvTotalBookings.text = "Total Bookings: 0"
-                    tvActiveBookings.text = "Active Bookings: 0"
-                    tvCompletedBookings.text = "Completed Bookings: 0"
-                    tvTotalSpent.text = "Total Spent: LKR 0"
-                    tvAvailableStations.text = "Available Stations: 0"
+                    tvTotalBookings.text = "0"
+                    tvActiveBookings.text = "0"
+                    tvCompletedBookings.text = "0"
+                    tvTotalSpent.text = "0"
+                    tvAvailableStations.text = "0"
+                    val statColor = resources.getColor(R.color.blue_primary, null)
+                    tvTotalBookings.setTextColor(statColor)
+                    tvActiveBookings.setTextColor(statColor)
+                    tvCompletedBookings.setTextColor(statColor)
+                    tvTotalSpent.setTextColor(statColor)
+                    tvAvailableStations.setTextColor(statColor)
                 }
             }
         })
