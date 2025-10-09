@@ -139,7 +139,7 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">NIC Number</Label>
               <div className="px-3 py-2 bg-muted rounded-md flex items-center">
                 <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
                 {profile?.email || user?.email || 'Not provided'}
@@ -184,7 +184,7 @@ const Profile: React.FC = () => {
 
             {profile?.nic && (
               <div className="space-y-2">
-                <Label htmlFor="nic">NIC Number</Label>
+                <Label htmlFor="nic">Email Address</Label>
                 <div className="px-3 py-2 bg-muted rounded-md">
                   {profile.nic}
                 </div>

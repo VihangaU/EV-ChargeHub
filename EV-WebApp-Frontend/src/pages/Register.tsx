@@ -69,16 +69,6 @@ const Register: React.FC = () => {
       return;
     }
 
-    // Validate NIC format (basic Sri Lankan NIC validation)
-    const nicPattern = /^(?:\d{9}[vVxX]|\d{12})$/;
-    if (!nicPattern.test(formData.nic)) {
-      toast({
-        title: "Invalid NIC",
-        description: "Please enter a valid Sri Lankan NIC number.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setIsLoading(true);
     
@@ -149,12 +139,12 @@ const Register: React.FC = () => {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nic">NIC Number *</Label>
+                  <Label htmlFor="nic">Email Address *</Label>
                   <Input
                     id="nic"
                     name="nic"
-                    type="text"
-                    placeholder="e.g., 199012345678"
+                    type="email"
+                    placeholder="e.g., your.email@example.com"
                     value={formData.nic}
                     onChange={handleInputChange}
                     disabled={isLoading}
@@ -178,12 +168,12 @@ const Register: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="email">NIC Number Address *</Label>
                   <Input
                     id="email"
                     name="email"
-                    type="email"
-                    placeholder="your.email@example.com"
+                    type="number"
+                    placeholder="199012345678"
                     value={formData.email}
                     onChange={handleInputChange}
                     disabled={isLoading}

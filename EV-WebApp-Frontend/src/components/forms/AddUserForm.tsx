@@ -132,12 +132,12 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">NIC Number</Label>
             <Input
               id="email"
               name="email"
-              type="email"
-              placeholder="Enter email address"
+              type="number"
+              placeholder="199012345678"
               value={formData.email}
               onChange={handleInputChange}
               disabled={isLoading}

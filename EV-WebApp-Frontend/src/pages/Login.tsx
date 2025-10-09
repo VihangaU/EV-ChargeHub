@@ -98,12 +98,12 @@ const Login: React.FC = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">NIC Number</Label>
                 <Input
                   id="email"
                   name="email"
-                  type="email"
-                  placeholder="Enter your email"
+                  type="text"
+                  placeholder="199012345678"
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={isLoading}
@@ -155,39 +155,7 @@ const Login: React.FC = () => {
               </div>
             </form>
 
-            {/* Demo Credentials Section */}
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center mb-4">Demo Accounts:</p>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  onClick={() => fillDemoCredentials('admin@evcharge.com')}
-                  className="w-full text-xs"
-                  disabled={isLoading}
-                >
-                  Demo Backoffice Admin
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => fillDemoCredentials('operator@evcharge.com')}
-                  className="w-full text-xs"
-                  disabled={isLoading}
-                >
-                  Demo Station Operator
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => fillDemoCredentials('john.silva@email.com')}
-                  className="w-full text-xs"
-                  disabled={isLoading}
-                >
-                  Demo EV Owner
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                All demo accounts use password: <code className="bg-muted px-2 py-1 rounded">password123</code>
-              </p>
-            </div>
+            
           </CardContent>
         </Card>
 
