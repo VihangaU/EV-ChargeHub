@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { Building2, Save } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Building2, Save, MapPin, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import apiService from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import { useJsApiLoader } from '@react-google-maps/api';
 
 interface AddStationFormProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showMapDialog, setShowMapDialog] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -29,12 +32,20 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     pricePerHour: 0,
     amenities: [] as string[]
   });
-  
+  const [mapCenter, setMapCenter] = useState({ lat: 6.9271, lng: 79.8612 }); // Default to Colombo, Sri Lanka
+  const [selectedPosition, setSelectedPosition] = useState<google.maps.LatLngLiteral | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: "AIzaSyCbuUW7FSLBWgaAn_1r92SIDp_Tk7W96lU",
+    libraries: ['places']
+  });
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'totalSlots' || name === 'pricePerHour' || name === 'latitude' || name === 'longitude' 
+      [name]: name === 'totalSlots' || name === 'pricePerHour' 
         ? Number(value) 
         : value
     }));
@@ -47,13 +58,110 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     }));
   };
 
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      setSelectedPosition({ lat, lng });
+      setFormData(prev => ({
+        ...prev,
+        latitude: lat,
+        longitude: lng
+      }));
+      setMapCenter({ lat, lng });
+    }
+  };
+
+  const handleSearch = useCallback(() => {
+    if (!isLoaded || !searchInputRef.current || !window.google) {
+      return;
+    }
+    const query = searchInputRef.current.value.trim();
+    if (!query) {
+      return;
+    }
+
+    const service = new window.google.maps.places.PlacesService(
+      document.createElement('div')
+    );
+
+    service.findPlaceFromQuery(
+      {
+        query,
+        fields: ['name', 'geometry', 'formatted_address'],
+      },
+      (results, status) => {
+        if (
+          status === window.google.maps.places.PlacesServiceStatus.OK &&
+          results &&
+          results[0]
+        ) {
+          const place = results[0];
+          if (place.geometry && place.geometry.location) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            setSelectedPosition({ lat, lng });
+            setFormData(prev => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng,
+              address: place.formatted_address || prev.address
+            }));
+            setMapCenter({ lat, lng });
+          }
+        } else {
+          toast({
+            title: "Search Error",
+            description: "No results found for the entered location.",
+            variant: "destructive",
+          });
+        }
+      }
+    );
+  }, [isLoaded, toast]);
+
+  useEffect(() => {
+    if (showMapDialog && isLoaded && searchInputRef.current && window.google) {
+      const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current);
+      const listener = autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+          return;
+        }
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setSelectedPosition({ lat, lng });
+        setFormData(prev => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng,
+          address: place.formatted_address || prev.address
+        }));
+        setMapCenter({ lat, lng });
+      });
+
+      return () => {
+        window.google.maps.event.removeListener(listener);
+      };
+    }
+  }, [showMapDialog, isLoaded]);
+
+  const openMapPicker = () => {
+    setShowMapDialog(true);
+  };
+
+  const closeMapPicker = () => {
+    setShowMapDialog(false);
+    setSelectedPosition(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.address || formData.totalSlots < 1 || formData.pricePerHour < 0) {
+    if (!formData.name || !formData.address || !formData.latitude || !formData.longitude || formData.totalSlots < 1 || formData.pricePerHour < 0) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields with valid values.",
+        description: "Please fill in all required fields with valid values, including selecting a location on the map.",
         variant: "destructive",
       });
       return;
@@ -134,33 +242,21 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
               required 
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input 
-                id="latitude" 
-                name="latitude"
-                type="number"
-                step="0.000001"
-                value={formData.latitude}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="e.g., 6.9271"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input 
-                id="longitude" 
-                name="longitude"
-                type="number"
-                step="0.000001"
-                value={formData.longitude}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                placeholder="e.g., 79.8612"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Location</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={openMapPicker}
+              disabled={isLoading}
+              className="w-full justify-start"
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              {formData.latitude && formData.longitude 
+                ? `Selected: ${formData.latitude.toFixed(6)}, ${formData.longitude.toFixed(6)}`
+                : 'Pick location on map'
+              }
+            </Button>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -211,6 +307,48 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
           </div>
         </form>
       </DialogContent>
+
+      {/* Map Dialog */}
+      <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Pick Location on Map</DialogTitle>
+            <DialogDescription>Search for a location or click on the map to select the station location.</DialogDescription>
+          </DialogHeader>
+          {loadError && <div className="text-red-500">Error loading Google Maps</div>}
+          {!isLoaded && <div className="text-center py-4">Loading map...</div>}
+          {isLoaded && (
+            <>
+              <div className="space-y-2 mb-4">
+                <Label htmlFor="locationSearch">Search Location</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    ref={searchInputRef}
+                    id="locationSearch"
+                    placeholder="Enter address or location"
+                  />
+                  <Button type="button" onClick={handleSearch} size="sm">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 relative">
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: '400px' }}
+                  center={mapCenter}
+                  zoom={12}
+                  onClick={handleMapClick}
+                >
+                  {selectedPosition && <Marker position={selectedPosition} />}
+                </GoogleMap>
+              </div>
+            </>
+          )}
+          <DialogFooter>
+            <Button type="button" onClick={closeMapPicker}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
