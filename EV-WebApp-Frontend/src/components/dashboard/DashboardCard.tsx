@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+// Define the props for the DashboardCard component
 interface DashboardCardProps {
   title: string;
   value: string | number;
@@ -8,10 +9,11 @@ interface DashboardCardProps {
   icon: React.ComponentType<{ className?: string }>;
   trend?: {
     value: number;
-    isPositive: boolean;
+    isPositive: boolean;  // Whether the trend is positive (green) or negative (red)
   };
 }
 
+// Functional component for the dashboard card
 const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
   value,

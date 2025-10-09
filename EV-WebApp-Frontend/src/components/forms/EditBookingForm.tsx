@@ -52,6 +52,7 @@ const EditBookingForm: React.FC<EditBookingFormProps> = ({ booking, isOpen, onCl
     return `${endHour.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
   };
   
+   // Handle form submission (update booking)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -69,8 +70,10 @@ const EditBookingForm: React.FC<EditBookingFormProps> = ({ booking, isOpen, onCl
     setIsLoading(true);
     
     try {
+      // Calculate end time before update
       const endTime = calculateEndTime(formData.startTime, formData.duration);
       
+      // API request to update booking
       const response = await apiService.updateBooking(booking.id, {
         reservationDate: formData.reservationDate,
         startTime: formData.startTime,

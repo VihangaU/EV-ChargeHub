@@ -44,6 +44,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ user, isOpen, onClose, onUs
     }));
   };
 
+  // Handle role selection change
   const handleRoleChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -51,6 +52,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ user, isOpen, onClose, onUs
     }));
   };
 
+  // Handle status selection change
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -73,6 +75,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ user, isOpen, onClose, onUs
     setIsLoading(true);
 
     try {
+      // API call to update the user
       const response = await apiService.updateUser(user.id, {
         name: formData.name,
         email: formData.email,

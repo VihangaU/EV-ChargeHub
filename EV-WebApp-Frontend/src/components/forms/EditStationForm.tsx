@@ -18,6 +18,7 @@ interface EditStationFormProps {
 const EditStationForm: React.FC<EditStationFormProps> = ({ station, isOpen, onClose, onStationUpdated }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  // Local form state for station fields
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -26,6 +27,7 @@ const EditStationForm: React.FC<EditStationFormProps> = ({ station, isOpen, onCl
     pricePerHour: 0
   });
 
+  // Populate form fields with station data when editing
   React.useEffect(() => {
     if (station) {
       setFormData({
@@ -38,6 +40,7 @@ const EditStationForm: React.FC<EditStationFormProps> = ({ station, isOpen, onCl
     }
   }, [station]);
 
+  // Handle input changes for all fields
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -65,6 +68,7 @@ const EditStationForm: React.FC<EditStationFormProps> = ({ station, isOpen, onCl
     setIsLoading(true);
     
     try {
+      // Call backend API to update station
       const response = await apiService.updateStation(station.id, {
         name: formData.name,
         address: formData.address,

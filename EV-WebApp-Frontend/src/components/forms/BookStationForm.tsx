@@ -31,6 +31,7 @@ const BookStationForm: React.FC<BookStationFormProps> = ({ station, isOpen, onCl
   const today = new Date().toISOString().split('T')[0];
   const maxDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+  // Calculate end time based on start time + duration
   const calculateEndTime = (startTime: string, duration: string) => {
     if (!startTime || !duration) return '';
     const [hours, minutes] = startTime.split(':').map(Number);
@@ -39,6 +40,7 @@ const BookStationForm: React.FC<BookStationFormProps> = ({ station, isOpen, onCl
     return `${endHour.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
   };
 
+  // Calculate total cost based on duration and station price
   const calculateCost = (duration: string) => {
     if (!duration || !station) return 0;
     return parseInt(duration) * station.pricePerHour;

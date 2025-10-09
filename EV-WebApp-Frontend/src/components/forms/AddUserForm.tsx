@@ -34,6 +34,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
     });
   };
 
+  // Handle input changes for name, email, password
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -41,6 +42,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
     }));
   };
 
+  // Handle role select dropdown changes
   const handleRoleChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -60,6 +62,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
       return;
     }
 
+    // Password strength check
     if (formData.password.length < 6) {
       toast({
         title: "Weak Password",
@@ -72,6 +75,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ isOpen, onClose, onUserAdded 
     setIsLoading(true);
 
     try {
+      // Call backend API to create a new user
       const response = await apiService.createUser({
         name: formData.name,
         email: formData.email,

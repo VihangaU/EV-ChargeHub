@@ -20,6 +20,7 @@ interface AddStationFormProps {
 const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStationAdded }) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  // Form & state management
   const [isLoading, setIsLoading] = useState(false);
   const [showMapDialog, setShowMapDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -36,11 +37,13 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
   const [selectedPosition, setSelectedPosition] = useState<google.maps.LatLngLiteral | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyCbuUW7FSLBWgaAn_1r92SIDp_Tk7W96lU",
     libraries: ['places']
   });
 
+  // Handle input field changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -51,6 +54,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     }));
   };
 
+  // Handle charging type change (AC/DC)
   const handleTypeChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -58,6 +62,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     }));
   };
 
+  // When user clicks on map, capture latitude & longitude
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
       const lat = e.latLng.lat();
@@ -72,6 +77,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     }
   };
 
+  // Handle manual search (via Places API)
   const handleSearch = useCallback(() => {
     if (!isLoaded || !searchInputRef.current || !window.google) {
       return;
@@ -96,6 +102,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
           results &&
           results[0]
         ) {
+          // If place found → update form data with coordinates + address
           const place = results[0];
           if (place.geometry && place.geometry.location) {
             const lat = place.geometry.location.lat();
@@ -120,6 +127,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     );
   }, [isLoaded, toast]);
 
+  // Initialize Google Places Autocomplete for the search input
   useEffect(() => {
     if (showMapDialog && isLoaded && searchInputRef.current && window.google) {
       const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current);
@@ -146,6 +154,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     }
   }, [showMapDialog, isLoaded]);
 
+  // Open and close map picker dialog
   const openMapPicker = () => {
     setShowMapDialog(true);
   };
@@ -155,6 +164,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     setSelectedPosition(null);
   };
 
+  // Form submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -170,6 +180,7 @@ const AddStationForm: React.FC<AddStationFormProps> = ({ isOpen, onClose, onStat
     setIsLoading(true);
     
     try {
+       // Call API to create station
       const response = await apiService.createStation({
         name: formData.name,
         address: formData.address,
