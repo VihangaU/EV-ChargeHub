@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -45,9 +46,10 @@ class BookingOperatorActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
-    private lateinit var bookingExpandableListView: ExpandableListView
+    private lateinit var bookingListView: ListView
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var btnScanQr: Button
+    private val bookings = mutableListOf<JSONObject>()
 
     // Modern scanner launcher
     private val scanLauncher = registerForActivityResult(ScanContract()) { result: ScanIntentResult? ->
@@ -68,7 +70,7 @@ class BookingOperatorActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         apiClient = ApiClient()
 
-        bookingExpandableListView = findViewById(R.id.booking_history_list)
+        bookingListView = findViewById(R.id.booking_list)
         bottomNavigation = findViewById(R.id.bottom_navigation_history)
         btnScanQr = findViewById(R.id.btn_scan_qr)
 
@@ -178,26 +180,19 @@ class BookingOperatorActivity : AppCompatActivity() {
                     val responseBody = response.body?.string() ?: "[]"
                     val jsonResponse = try { JSONArray(responseBody) } catch (e: Exception) { JSONArray() }
 
-                    val bookings = mutableListOf<JSONObject>()
+                    bookings.clear()
                     for (i in 0 until jsonResponse.length()) {
                         bookings.add(jsonResponse.getJSONObject(i))
                     }
 
-                    val stationBookings = bookings.groupBy { it.optString("stationName", "Unknown Station") }
-                    val stationList = stationBookings.keys.sorted().toList()
-
                     runOnUiThread {
-                        if (stationList.isEmpty()) {
+                        if (bookings.isEmpty()) {
                             Toast.makeText(this@BookingOperatorActivity, "No bookings found", Toast.LENGTH_SHORT).show()
                         } else {
-                            val adapter = BookingExpandableAdapter(
-                                this@BookingOperatorActivity, stationList, stationBookings
-                            )
-                            bookingExpandableListView.setAdapter(adapter)
-                            bookingExpandableListView.setOnChildClickListener { _, _, groupPosition, childPosition, _ ->
-                                val booking = adapter.getChild(groupPosition, childPosition) as JSONObject
-                                showBookingDetails(booking)
-                                true
+                            val adapter = SimpleBookingAdapter(this@BookingOperatorActivity, bookings)
+                            bookingListView.adapter = adapter
+                            bookingListView.setOnItemClickListener { _, _, position, _ ->
+                                showBookingDetails(bookings[position])
                             }
                         }
                     }
@@ -216,97 +211,70 @@ class BookingOperatorActivity : AppCompatActivity() {
         })
     }
 
-    private fun refreshBookings(token: String) = fetchBookingHistory(token)
-
     private fun showBookingDetails(booking: JSONObject) {
         val token = sessionManager.getToken() ?: return
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_booking_details, null)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_booking_details_simple, null)
 
         val tvStationName = dialogView.findViewById<TextView>(R.id.tv_station_name)
         val tvAddress = dialogView.findViewById<TextView>(R.id.tv_address)
         val tvDateTime = dialogView.findViewById<TextView>(R.id.tv_date_time)
-        val tvStartTime = dialogView.findViewById<TextView>(R.id.tv_start_time)
-        val tvEndTime = dialogView.findViewById<TextView>(R.id.tv_end_time)
         val tvDuration = dialogView.findViewById<TextView>(R.id.tv_duration)
         val tvTotalCost = dialogView.findViewById<TextView>(R.id.tv_total_cost)
         val tvStatus = dialogView.findViewById<TextView>(R.id.tv_status)
-        val tvNotes = dialogView.findViewById<TextView>(R.id.tv_notes)
-        val btnEdit = dialogView.findViewById<Button>(R.id.btn_edit)
-        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnAction = dialogView.findViewById<Button>(R.id.btn_action)
         val btnGenerateQR = dialogView.findViewById<Button>(R.id.btn_generate_qr)
 
         tvStationName.text = booking.optString("stationName", "N/A")
         tvAddress.text = booking.optString("stationAddress", "N/A")
-        tvDateTime.text = booking.optString("reservationDate", "N/A")
-        tvStartTime.text = booking.optString("startTime", "N/A")
-        tvEndTime.text = booking.optString("endTime", "N/A")
+        val startTime = booking.optString("startTime", "")
+        val endTime = booking.optString("endTime", "")
+        tvDateTime.text = "${booking.optString("reservationDate", "")} ($startTime - $endTime)"
         tvDuration.text = "${booking.optInt("duration", 0)} hours"
         tvTotalCost.text = "LKR ${booking.optInt("totalCost", 0)}"
         tvStatus.text = booking.optString("status", "N/A").replaceFirstChar { it.uppercase() }
-        tvNotes.text = booking.optString("notes", "No notes")
 
         val status = booking.optString("status", "").lowercase()
         val bookingId = booking.optString("_id", booking.optString("id", ""))
 
-        // Reset visibilities
-        btnEdit.visibility = View.GONE
-        btnCancel.visibility = View.GONE
-        btnGenerateQR.visibility = View.GONE
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Booking Details")
-            .setView(dialogView)
-            .setPositiveButton("Close", null)
-            .create()
-
+        // Configure buttons based on status
         when (status) {
             "pending" -> {
-                btnEdit.text = "Approve"
-                btnEdit.setOnClickListener {
-                    dialog.dismiss()
+                btnAction.text = "Approve"
+                btnAction.visibility = View.VISIBLE
+                btnAction.setOnClickListener {
                     updateBookingStatus(token, bookingId, "approved")
                 }
-                btnEdit.visibility = View.VISIBLE
-
-                btnCancel.text = "Reject"
-                btnCancel.setOnClickListener {
-                    dialog.dismiss()
-                    updateBookingStatus(token, bookingId, "cancelled")
-                }
-                btnCancel.visibility = View.VISIBLE
             }
             "approved" -> {
-                btnEdit.text = "Start Charging"
-                btnEdit.setOnClickListener {
-                    dialog.dismiss()
-                    updateBookingStatus(token, bookingId, "in_progress")
-                }
-                btnEdit.visibility = View.VISIBLE
-
+                btnAction.text = "Start Charging"
+                btnAction.visibility = View.VISIBLE
                 btnGenerateQR.visibility = View.VISIBLE
-                btnGenerateQR.setOnClickListener {
-                    dialog.dismiss()
-                    generateAndShowQR(booking)
+                btnAction.setOnClickListener {
+                    updateBookingStatus(token, bookingId, "in_progress")
                 }
             }
             "in_progress" -> {
-                btnEdit.text = "Complete"
-                btnEdit.setOnClickListener {
-                    dialog.dismiss()
+                btnAction.text = "Complete"
+                btnAction.visibility = View.VISIBLE
+                btnGenerateQR.visibility = View.VISIBLE
+                btnAction.setOnClickListener {
                     updateBookingStatus(token, bookingId, "completed")
                 }
-                btnEdit.visibility = View.VISIBLE
-
-                btnGenerateQR.visibility = View.VISIBLE
-                btnGenerateQR.setOnClickListener {
-                    dialog.dismiss()
-                    generateAndShowQR(booking)
-                }
             }
-            // For other statuses like completed, cancelled: no actions
+            else -> {
+                btnAction.visibility = View.GONE
+                btnGenerateQR.visibility = View.GONE
+            }
         }
 
-        dialog.show()
+        btnGenerateQR.setOnClickListener {
+            generateAndShowQR(booking)
+        }
+
+        AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     private fun updateBookingStatus(token: String, bookingId: String, newStatus: String) {
@@ -406,75 +374,50 @@ class BookingOperatorActivity : AppCompatActivity() {
         return bitmap
     }
 
-    private inner class BookingExpandableAdapter(
+    // Simple Adapter for ListView
+    private class SimpleBookingAdapter(
         private val context: Context,
-        private val groups: List<String>,
-        private val children: Map<String, List<JSONObject>>
-    ) : BaseExpandableListAdapter() {
+        private val bookings: List<JSONObject>
+    ) : BaseAdapter() {
 
-        override fun getGroupCount(): Int = groups.size
+        override fun getCount(): Int = bookings.size
+        override fun getItem(position: Int): JSONObject = bookings[position]
+        override fun getItemId(position: Int): Long = position.toLong()
 
-        override fun getChildrenCount(groupPosition: Int): Int = children[groups[groupPosition]]?.size ?: 0
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_booking_simple, parent, false)
+            val booking = bookings[position]
 
-        override fun getGroup(groupPosition: Int): Any = groups[groupPosition]
+            val tvStationName = view.findViewById<TextView>(R.id.tv_station_name)
+            val tvStatus = view.findViewById<TextView>(R.id.tv_status)
+            val tvDateTime = view.findViewById<TextView>(R.id.tv_date_time)
+            val tvAddress = view.findViewById<TextView>(R.id.tv_address)
 
-        override fun getChild(groupPosition: Int, childPosition: Int): Any = children[groups[groupPosition]]!![childPosition]
-
-        override fun getGroupId(groupPosition: Int): Long = groupPosition.toLong()
-
-        override fun getChildId(groupPosition: Int, childPosition: Int): Long = (groupPosition * 1000 + childPosition).toLong()
-
-        override fun hasStableIds(): Boolean = true
-
-        override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View {
-            val groupView = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_station_group, parent, false)
-            val stationName = groups[groupPosition]
-            val bookingCount = children[stationName]?.size ?: 0
-
-            val tvStationName = groupView.findViewById<TextView>(R.id.tv_station_name_group)
-            val tvCount = groupView.findViewById<TextView>(R.id.tv_booking_count)
-
-            tvStationName.text = "$stationName Station Bookings"
-            tvCount.text = "($bookingCount)"
-
-            return groupView
-        }
-
-        override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View {
-            val rowView = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_reservation_operator, parent, false)
-            val booking = children[groups[groupPosition]]!![childPosition]
-
-            val tvAddress = rowView.findViewById<TextView>(R.id.tv_address)
-            val tvDateTime = rowView.findViewById<TextView>(R.id.tv_date_time)
-            val tvStatus = rowView.findViewById<TextView>(R.id.tv_status)
-            val ivIcon = rowView.findViewById<ImageView>(R.id.iv_icon)
-
-            tvAddress.text = booking.optString("stationAddress", "N/A")
+            tvStationName.text = booking.optString("stationName", "Unknown Station")
+            val status = booking.optString("status", "Unknown").replaceFirstChar { it.uppercase() }
+            tvStatus.text = status
+            
             val startTime = booking.optString("startTime", "")
             val endTime = booking.optString("endTime", "")
             tvDateTime.text = "${booking.optString("reservationDate", "")} $startTime - $endTime"
-            val status = booking.optString("status", "Unknown").replaceFirstChar { it.uppercase() }
-            tvStatus.text = status
+            tvAddress.text = booking.optString("stationAddress", "N/A")
 
-            tvStatus.setTextColor(when (status.lowercase()) {
-                "pending" -> context.getColor(android.R.color.holo_orange_dark)
-                "approved", "completed", "in_progress" -> context.getColor(android.R.color.holo_green_dark)
-                "cancelled" -> context.getColor(android.R.color.holo_red_dark)
-                else -> context.getColor(android.R.color.black)
-            })
+            // Set status color
+            val statusBackground = tvStatus.background as? GradientDrawable
+            when (status.lowercase()) {
+                "pending" -> tvStatus.setBackgroundColor(context.getColor(android.R.color.holo_orange_dark))
+                "approved" -> tvStatus.setBackgroundColor(context.getColor(android.R.color.holo_blue_bright))
+                "in_progress" -> tvStatus.setBackgroundColor(context.getColor(android.R.color.holo_green_dark))
+                "completed" -> tvStatus.setBackgroundColor(context.getColor(android.R.color.holo_green_light))
+                "cancelled" -> tvStatus.setBackgroundColor(context.getColor(android.R.color.holo_red_dark))
+                else -> tvStatus.setBackgroundColor(context.getColor(android.R.color.darker_gray))
+            }
 
-            ivIcon.setImageResource(when (status.lowercase()) {
-                "pending" -> android.R.drawable.ic_dialog_alert
-                "approved", "in_progress" -> android.R.drawable.ic_dialog_info
-                "completed" -> android.R.drawable.ic_dialog_email
-                "cancelled" -> android.R.drawable.ic_delete
-                else -> android.R.drawable.ic_menu_recent_history
-            })
-            ivIcon.setColorFilter(context.getColor(android.R.color.holo_blue_dark))
-
-            return rowView
+            return view
         }
+    }
 
-        override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean = true
+    private fun refreshBookings(token: String) {
+        fetchBookingHistory(token)
     }
 }
