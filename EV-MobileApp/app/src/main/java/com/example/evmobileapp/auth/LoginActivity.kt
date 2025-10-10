@@ -4,13 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView // 1. Import TextView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
 import com.example.evmobileapp.owner.OwnerDashboardActivity
 import com.example.evmobileapp.operator.OperatorDashboardActivity
-import com.example.evmobileapp.utils.ApiClient
+import com.example.evmobileapp.data.Repositories
 import com.example.evmobileapp.utils.SessionManager
 import org.json.JSONObject
 import okhttp3.*
@@ -20,8 +20,8 @@ import java.io.IOException
 
 class LoginActivity : AppCompatActivity() {
 
+    private lateinit var repository: Repositories
     private lateinit var sessionManager: SessionManager
-    private lateinit var apiClient: ApiClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,11 +30,10 @@ class LoginActivity : AppCompatActivity() {
         val email: EditText = findViewById(R.id.email)
         val password: EditText = findViewById(R.id.password)
         val loginButton: Button = findViewById(R.id.login_button)
-        // 2. Find the new TextView by its ID
         val signupLink: TextView = findViewById(R.id.signup_link)
 
+        repository = Repositories(this)
         sessionManager = SessionManager(this)
-        apiClient = ApiClient()
 
         loginButton.setOnClickListener {
             val emailText = email.text.toString()
@@ -47,9 +46,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // 3. Set an OnClickListener for the sign-up link
         signupLink.setOnClickListener {
-            // Create an Intent to start SignupActivity
             val intent = Intent(this, SignupActivity::class.java)
             startActivity(intent)
         }
@@ -73,7 +70,11 @@ class LoginActivity : AppCompatActivity() {
                     val responseBody = response.body?.string()
                     val jsonResponse = JSONObject(responseBody!!)
                     val token = jsonResponse.getString("token")
-                    val role = jsonResponse.getJSONObject("user").getString("role")
+                    val user = jsonResponse.getJSONObject("user")
+                    val userEmail = user.getString("email")
+                    val role = user.getString("role")
+                    val userId = user.optString("_id", user.optString("id", ""))
+                    repository.saveSession(userEmail, role, token, userId)
                     sessionManager.saveToken(token)
 
                     runOnUiThread {

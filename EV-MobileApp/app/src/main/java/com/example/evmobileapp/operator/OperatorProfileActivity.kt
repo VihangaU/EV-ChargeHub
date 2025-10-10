@@ -2,8 +2,6 @@ package com.example.evmobileapp.operator
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Base64
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
@@ -14,10 +12,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.evmobileapp.R
 import com.example.evmobileapp.auth.LoginActivity
-import com.example.evmobileapp.owner.BookingHistoryActivity
+import com.example.evmobileapp.operator.BookingOperatorActivity
 import com.example.evmobileapp.operator.OperatorDashboardActivity
-import com.example.evmobileapp.utils.ApiClient
-import com.example.evmobileapp.utils.SessionManager
+import com.example.evmobileapp.data.Repositories
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import okhttp3.*
@@ -28,8 +25,7 @@ import java.io.IOException
 
 class OperatorProfileActivity : AppCompatActivity() {
 
-    private lateinit var sessionManager: SessionManager
-    private lateinit var apiClient: ApiClient
+    private lateinit var repository: Repositories
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var ivAppLogo: ImageView
     private lateinit var tvName: TextView
@@ -44,8 +40,7 @@ class OperatorProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_operator_profile)
 
-        sessionManager = SessionManager(this)
-        apiClient = ApiClient()
+        repository = Repositories(this)
 
         ivAppLogo = findViewById(R.id.iv_app_logo)
         tvName = findViewById(R.id.tv_name)
@@ -59,43 +54,21 @@ class OperatorProfileActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupButtons()
 
-        val token = sessionManager.getToken()
-        if (token != null) {
-            userId = getUserIdFromToken(token) ?: ""
+        val currentSession = repository.getCurrentSession()
+        if (currentSession != null) {
+            userId = currentSession.userId ?: ""
             if (userId.isNotEmpty()) {
-                fetchProfileData(token)
+                fetchProfileData(currentSession.token)
             } else {
-                Toast.makeText(this, "Invalid token. Please login again.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Invalid session. Please login again.", Toast.LENGTH_SHORT).show()
+                repository.clearAllData()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
             }
         } else {
-            Toast.makeText(this, "No token found. Please login.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun getUserIdFromToken(token: String): String? {
-        return try {
-            // Remove Bearer prefix if present
-            val cleanToken = token.replace("Bearer ", "")
-            val parts = cleanToken.split("\\.".toRegex())
-            if (parts.size != 3) return null
-
-            // Decode payload (base64)
-            val payload = parts[1]
-            val normalizedPayload = payload.padEnd((payload.length / 4) * 4, '=')
-            val decodedBytes = Base64.decode(normalizedPayload, Base64.URL_SAFE)
-            val jsonPayload = String(decodedBytes)
-
-            // Log for debugging (remove after fixing)
-            Log.d("TokenDecode", "Full payload: $jsonPayload")
-
-            // Parse JSON to get nameid (from ClaimTypes.NameIdentifier) or fallback to sub/userId
-            val jsonObject = JSONObject(jsonPayload)
-            jsonObject.optString("nameid", null) ?:
-            jsonObject.optString("sub", null) ?:
-            jsonObject.optString("userId", null)
-        } catch (e: Exception) {
-            Log.e("TokenDecode", "Error decoding token", e)
-            null
+            Toast.makeText(this, "No session found. Please login.", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
     }
 
@@ -125,7 +98,7 @@ class OperatorProfileActivity : AppCompatActivity() {
             showEditProfileDialog()
         }
         btnLogout.setOnClickListener {
-            sessionManager.clearSession()
+            repository.clearAllData()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
@@ -145,9 +118,9 @@ class OperatorProfileActivity : AppCompatActivity() {
                 val name = etName.text.toString().trim()
 
                 if (name.isNotEmpty()) {
-                    val token = sessionManager.getToken()
-                    if (token != null && userId.isNotEmpty()) {
-                        updateProfile(token, userId, name)
+                    val currentSession = repository.getCurrentSession()
+                    if (currentSession != null && userId.isNotEmpty()) {
+                        updateProfile(currentSession.token, userId, name)
                     } else {
                         Toast.makeText(this, "User data not available", Toast.LENGTH_SHORT).show()
                     }
@@ -178,7 +151,10 @@ class OperatorProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     runOnUiThread {
                         Toast.makeText(this@OperatorProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                        fetchProfileData(token) // Refetch to update UI
+                        val currentSession = repository.getCurrentSession()
+                        if (currentSession != null) {
+                            fetchProfileData(currentSession.token) // Refetch to update UI
+                        }
                     }
                 } else {
                     runOnUiThread {
