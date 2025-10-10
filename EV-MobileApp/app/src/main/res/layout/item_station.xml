@@ -6,50 +6,97 @@
     android:layout_margin="8dp"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <TextView
-            android:id="@+id/tv_station_name"
-            android:layout_width="wrap_content"
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Station Name"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#1976D2" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
 
-        <TextView
-            android:id="@+id/tv_station_address"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Address"
-            android:textSize="14sp"
-            android:textColor="#424242"
-            android:layout_marginTop="4dp" />
+            <TextView
+                android:id="@+id/tv_station_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Station Name"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#1976D2" />
 
-        <TextView
-            android:id="@+id/tv_slots"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Slots"
-            android:textSize="14sp"
-            android:textColor="#0277BD"
-            android:layout_marginTop="4dp" />
+            <TextView
+                android:id="@+id/tv_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LKR 150/hr"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#4CAF50"
+                android:background="@drawable/price_badge_background"
+                android:padding="8dp" />
 
-        <TextView
-            android:id="@+id/tv_price"
-            android:layout_width="wrap_content"
+        </LinearLayout>
+
+        <!-- Address -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Price"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#1565C0"
-            android:layout_marginTop="4dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@android:drawable/ic_dialog_map"
+                android:layout_marginEnd="8dp"
+                app:tint="#666666" />
+
+            <TextView
+                android:id="@+id/tv_station_address"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Station Address"
+                android:textSize="14sp"
+                android:textColor="#666666" />
+
+        </LinearLayout>
+
+        <!-- Slots -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@android:drawable/ic_menu_compass"
+                android:layout_marginEnd="8dp"
+                app:tint="#2196F3" />
+
+            <TextView
+                android:id="@+id/tv_slots"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="8 / 10 slots available"
+                android:textSize="14sp"
+                android:textColor="#2196F3"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
