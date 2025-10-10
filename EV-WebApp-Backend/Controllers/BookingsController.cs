@@ -216,6 +216,18 @@ public class BookingsController : ControllerBase
                 return NotFound(new { message = "Booking not found" });
             }
 
+            // Add validation for cancellation (12-hour advance notice)
+            if (statusUpdate.Status == "cancelled")
+            {
+                var reservationDateTime = DateTime.Parse($"{booking.ReservationDate} {booking.StartTime}");
+                var hoursUntilReservation = (reservationDateTime - DateTime.Now).TotalHours;
+
+                if (hoursUntilReservation < 12)
+                {
+                    return BadRequest(new { message = "Bookings can only be cancelled at least 12 hours before the reservation time" });
+                }
+            }
+
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
