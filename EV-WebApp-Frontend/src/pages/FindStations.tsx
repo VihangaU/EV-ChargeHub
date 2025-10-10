@@ -120,9 +120,9 @@ const FindStations: React.FC = () => {
             <CardContent className="space-y-4">
               {/* Station Stats */}
               <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
-            <span className="text-white font-bold text-xl">EV</span>
-          </div>
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4 text-green-600" />
+                  <div>
                     <div className="text-sm font-medium">{station.availableSlots}/{station.totalSlots}</div>
                     <div className="text-xs text-muted-foreground">Available Slots</div>
                   </div>
