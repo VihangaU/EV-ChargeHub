@@ -207,9 +207,14 @@ const Home: React.FC = () => {
               </Button>
             </Link>
             <Link to="/login">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3 text-white border-white hover:bg-white hover:text-primary">
-                Sign In
-              </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-3 text-black border-white hover:bg-white hover:text-primary"
+            >
+              Sign In
+            </Button>
+
             </Link>
           </div>
         </div>
