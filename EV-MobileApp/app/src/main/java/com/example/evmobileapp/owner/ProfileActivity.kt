@@ -28,7 +28,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private lateinit var repository: Repositories
     private lateinit var bottomNavigation: BottomNavigationView
-    private lateinit var ivAppLogo: ImageView
+    private lateinit var ivProfileAvatar: ImageView // Changed from ivAppLogo to ivProfileAvatar
     private lateinit var tvName: TextView
     private lateinit var tvNic: TextView
     private lateinit var tvEmail: TextView
@@ -49,7 +49,7 @@ class ProfileActivity : AppCompatActivity() {
 
         repository = Repositories(this)
 
-        ivAppLogo = findViewById(R.id.iv_app_logo)
+        ivProfileAvatar = findViewById(R.id.iv_profile_avatar) // Fixed the reference
         tvName = findViewById(R.id.tv_name)
         tvNic = findViewById(R.id.tv_nic)
         tvEmail = findViewById(R.id.tv_email)
@@ -125,10 +125,10 @@ class ProfileActivity : AppCompatActivity() {
         val etVehicleNumber = dialogView.findViewById<EditText>(R.id.et_vehicle_number)
 
         // Pre-fill current values (strip labels if present)
-        etPhone.setText(tvPhone.text.toString().replace("Phone: ", "").trim())
-        etAddress.setText(tvAddress.text.toString().replace("Address: ", "").trim())
-        etVehicleModel.setText(tvVehicleModel.text.toString().replace("Vehicle Model: ", "").trim())
-        etVehicleNumber.setText(tvVehicleNumber.text.toString().replace("Vehicle Number: ", "").trim())
+        etPhone.setText(tvPhone.text.toString().trim())
+        etAddress.setText(tvAddress.text.toString().trim())
+        etVehicleModel.setText(tvVehicleModel.text.toString().trim())
+        etVehicleNumber.setText(tvVehicleNumber.text.toString().trim())
 
         val dialog = AlertDialog.Builder(this)
             .setTitle("Edit Profile")
@@ -137,7 +137,7 @@ class ProfileActivity : AppCompatActivity() {
                 val phone = etPhone.text.toString().trim()
                 val address = etAddress.text.toString().trim()
                 val vehicleModel = etVehicleModel.text.toString().trim()
-                val vehicleNumber = tvVehicleNumber.text.toString().trim()
+                val vehicleNumber = etVehicleNumber.text.toString().trim() // Fixed this line
 
                 if (phone.isNotEmpty() && address.isNotEmpty() && vehicleModel.isNotEmpty() && vehicleNumber.isNotEmpty()) {
                     val currentSession = repository.getCurrentSession()
@@ -273,7 +273,7 @@ class ProfileActivity : AppCompatActivity() {
                         tvAddress.text = jsonResponse.optString("address", "N/A")
                         tvVehicleModel.text = jsonResponse.optString("vehicleModel", "N/A")
                         tvVehicleNumber.text = jsonResponse.optString("vehicleNumber", "N/A")
-                        tvStatus.text = jsonResponse.optString("status", "N/A").capitalize()
+                        tvStatus.text = jsonResponse.optString("status", "N/A").replaceFirstChar { it.uppercase() }
                     }
                 } else {
                     runOnUiThread {
