@@ -97,11 +97,12 @@ class OperatorDashboardActivity : AppCompatActivity() {
                     val availableSlots = jsonResponse.optInt("availableSlots", 0)
 
                     runOnUiThread {
-                        tvTotalStations.text = "Total Stations: $totalStations"
-                        tvTotalBookings.text = "Total Bookings: $totalBookings"
-                        tvActiveBookings.text = "Active Bookings: $activeBookings"
-                        tvTotalRevenue.text = "Total Revenue: LKR $totalRevenue"
-                        tvAvailableSlots.text = "Available Slots: $availableSlots"
+                        // Update TextViews with just numbers (matching owner dashboard style)
+                        tvTotalStations.text = totalStations.toString()
+                        tvTotalBookings.text = totalBookings.toString()
+                        tvActiveBookings.text = activeBookings.toString()
+                        tvTotalRevenue.text = "LKR $totalRevenue"
+                        tvAvailableSlots.text = availableSlots.toString()
                     }
                 } else {
                     runOnUiThread {
