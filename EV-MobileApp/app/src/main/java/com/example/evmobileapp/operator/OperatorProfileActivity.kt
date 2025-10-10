@@ -2,6 +2,8 @@ package com.example.evmobileapp.operator
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
@@ -25,9 +27,9 @@ import java.io.IOException
 
 class OperatorProfileActivity : AppCompatActivity() {
 
-    private lateinit var repository: Repositories
+    private lateinit var sessionManager: SessionManager
+    private lateinit var apiClient: ApiClient
     private lateinit var bottomNavigation: BottomNavigationView
-    private lateinit var ivAppLogo: ImageView
     private lateinit var tvName: TextView
     private lateinit var tvEmail: TextView
     private lateinit var tvRole: TextView
@@ -40,9 +42,16 @@ class OperatorProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_operator_profile)
 
-        repository = Repositories(this)
+        sessionManager = SessionManager(this)
+        apiClient = ApiClient()
 
-        ivAppLogo = findViewById(R.id.iv_app_logo)
+        initViews()
+        setupBottomNavigation()
+        setupButtons()
+        loadProfileData()
+    }
+
+    private fun initViews() {
         tvName = findViewById(R.id.tv_name)
         tvEmail = findViewById(R.id.tv_email)
         tvRole = findViewById(R.id.tv_role)
@@ -50,25 +59,19 @@ class OperatorProfileActivity : AppCompatActivity() {
         btnEditProfile = findViewById(R.id.btn_edit_profile)
         btnLogout = findViewById(R.id.btn_logout)
         bottomNavigation = findViewById(R.id.bottom_navigation_profile)
+    }
 
-        setupBottomNavigation()
-        setupButtons()
-
-        val currentSession = repository.getCurrentSession()
-        if (currentSession != null) {
-            userId = currentSession.userId ?: ""
+    private fun loadProfileData() {
+        val token = sessionManager.getToken()
+        if (token != null) {
+            userId = getUserIdFromToken(token) ?: ""
             if (userId.isNotEmpty()) {
-                fetchProfileData(currentSession.token)
+                fetchProfileData(token)
             } else {
-                Toast.makeText(this, "Invalid session. Please login again.", Toast.LENGTH_SHORT).show()
-                repository.clearAllData()
-                startActivity(Intent(this, LoginActivity::class.java))
-                finish()
+                showError("Invalid token. Please login again.")
             }
         } else {
-            Toast.makeText(this, "No session found. Please login.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            showError("No token found. Please login.")
         }
     }
 
@@ -83,10 +86,7 @@ class OperatorProfileActivity : AppCompatActivity() {
                     startActivity(Intent(this, BookingOperatorActivity::class.java))
                     true
                 }
-                R.id.nav_profile_station -> {
-                    // Already on profile
-                    true
-                }
+                R.id.nav_profile_station -> true
                 else -> false
             }
         }
@@ -98,10 +98,21 @@ class OperatorProfileActivity : AppCompatActivity() {
             showEditProfileDialog()
         }
         btnLogout.setOnClickListener {
-            repository.clearAllData()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            showLogoutConfirmation()
         }
+    }
+
+    private fun showLogoutConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Yes") { _, _ ->
+                sessionManager.clearSession()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun showEditProfileDialog() {
@@ -111,34 +122,50 @@ class OperatorProfileActivity : AppCompatActivity() {
         // Pre-fill current value
         etName.setText(tvName.text.toString().trim())
 
-        val dialog = AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle("Edit Profile")
             .setView(dialogView)
             .setPositiveButton("Save") { _, _ ->
                 val name = etName.text.toString().trim()
-
                 if (name.isNotEmpty()) {
-                    val currentSession = repository.getCurrentSession()
-                    if (currentSession != null && userId.isNotEmpty()) {
-                        updateProfile(currentSession.token, userId, name)
+                    val token = sessionManager.getToken()
+                    if (token != null && userId.isNotEmpty()) {
+                        updateProfile(token, userId, name)
                     } else {
-                        Toast.makeText(this, "User data not available", Toast.LENGTH_SHORT).show()
+                        showError("User data not available")
                     }
                 } else {
-                    Toast.makeText(this, "Please fill the name", Toast.LENGTH_SHORT).show()
+                    showError("Please enter your name")
                 }
             }
             .setNegativeButton("Cancel", null)
-            .create()
+            .show()
+    }
 
-        dialog.show()
+    private fun getUserIdFromToken(token: String): String? {
+        return try {
+            val cleanToken = token.replace("Bearer ", "")
+            val parts = cleanToken.split("\\.".toRegex())
+            if (parts.size != 3) return null
+
+            val payload = parts[1]
+            val normalizedPayload = payload.padEnd((payload.length / 4) * 4, '=')
+            val decodedBytes = Base64.decode(normalizedPayload, Base64.URL_SAFE)
+            val jsonPayload = String(decodedBytes)
+
+            val jsonObject = JSONObject(jsonPayload)
+            jsonObject.optString("nameid", null) ?:
+            jsonObject.optString("sub", null) ?:
+            jsonObject.optString("userId", null)
+        } catch (e: Exception) {
+            Log.e("TokenDecode", "Error decoding token", e)
+            null
+        }
     }
 
     private fun updateProfile(token: String, userId: String, name: String) {
         val client = OkHttpClient()
-        val json = JSONObject().apply {
-            put("name", name)
-        }
+        val json = JSONObject().apply { put("name", name) }
         val body = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
             .url("http://10.0.2.2:5001/api/users/$userId")
@@ -148,24 +175,19 @@ class OperatorProfileActivity : AppCompatActivity() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    runOnUiThread {
+                runOnUiThread {
+                    if (response.isSuccessful) {
                         Toast.makeText(this@OperatorProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                        val currentSession = repository.getCurrentSession()
-                        if (currentSession != null) {
-                            fetchProfileData(currentSession.token) // Refetch to update UI
-                        }
-                    }
-                } else {
-                    runOnUiThread {
-                        Toast.makeText(this@OperatorProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
+                        fetchProfileData(token)
+                    } else {
+                        showError("Failed to update profile")
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    Toast.makeText(this@OperatorProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                    showError("Network error occurred")
                 }
             }
         })
@@ -187,21 +209,38 @@ class OperatorProfileActivity : AppCompatActivity() {
                     runOnUiThread {
                         tvName.text = jsonResponse.optString("name", "N/A")
                         tvEmail.text = jsonResponse.optString("email", "N/A")
-                        tvRole.text = jsonResponse.optString("role", "N/A")
-                        tvStatus.text = jsonResponse.optString("status", "N/A").capitalize()
+                        tvRole.text = formatRole(jsonResponse.optString("role", "N/A"))
+                        tvStatus.text = formatStatus(jsonResponse.optString("status", "N/A"))
                     }
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this@OperatorProfileActivity, "Failed to fetch profile", Toast.LENGTH_SHORT).show()
+                        showError("Failed to fetch profile data")
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    Toast.makeText(this@OperatorProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                    showError("Network error occurred")
                 }
             }
         })
+    }
+
+    private fun formatRole(role: String): String {
+        return when (role.lowercase()) {
+            "station_operator" -> "Station Operator"
+            "ev_owner" -> "EV Owner"
+            "backoffice" -> "Back Office"
+            else -> role.replaceFirstChar { it.uppercase() }
+        }
+    }
+
+    private fun formatStatus(status: String): String {
+        return status.replaceFirstChar { it.uppercase() }
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
