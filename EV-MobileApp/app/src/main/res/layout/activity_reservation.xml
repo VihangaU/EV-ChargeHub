@@ -14,54 +14,83 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/content_layout"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/header_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        app:layout_constraintTop_toBottomOf="@+id/include_app_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/reservation_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Book a Charging Station"
+            android:textSize="24sp"
+            android:textColor="#1976D2"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+    <!-- Content Container -->
+    <FrameLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="30dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/header_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation_reservation">
 
-        <TextView
-            android:id="@+id/reservation_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Select Station"
-            android:textSize="24sp"
-            android:textColor="#1976D2"
-            android:textStyle="bold"
-            android:layout_marginTop="40dp"
-            android:layout_marginBottom="30dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+        <!-- Stations List -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/stations_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_stations"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="1dp"
-            android:visibility="visible"
-            app:layout_constraintTop_toBottomOf="@+id/reservation_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Available Stations"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#1976D2"
+                    android:padding="20dp"
+                    android:gravity="center" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_stations"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="16dp"
+                    android:clipToPadding="false" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Booking Form -->
         <androidx.cardview.widget.CardView
             android:id="@+id/booking_form"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:visibility="gone"
             app:cardBackgroundColor="#FFFFFF"
             app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/reservation_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:cardElevation="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -82,109 +111,176 @@
 
                         <TextView
                             android:id="@+id/tv_selected_station"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Selected Station"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="#1976D2"
-                            android:layout_marginBottom="20dp" />
+                            android:gravity="center"
+                            android:layout_marginBottom="32dp" />
 
-                        <com.google.android.material.textfield.TextInputLayout
+                        <!-- Date Selection -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="16dp"
-                            app:startIconDrawable="@android:drawable/ic_menu_today"
-                            app:boxStrokeColor="#B3E5FC">
+                            android:orientation="vertical"
+                            android:layout_marginBottom="20dp">
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/et_date"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Date"
+                                android:textSize="14sp"
+                                android:textColor="#666666"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="8dp" />
+
+                            <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="Reservation Date (YYYY-MM-DD)"
-                                android:inputType="none"
-                                android:enabled="false" />
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
 
-                        </com.google.android.material.textfield.TextInputLayout>
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_date"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:hint="Select date"
+                                    android:enabled="false"
+                                    android:background="@drawable/input_background"
+                                    android:padding="16dp"
+                                    android:layout_marginEnd="12dp" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_pick_date"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pick Date"
-                            android:backgroundTint="#2196F3"
-                            android:layout_marginBottom="16dp" />
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_pick_date"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="56dp"
+                                    android:text="Pick"
+                                    android:backgroundTint="#2196F3"
+                                    app:cornerRadius="8dp" />
 
-                        <com.google.android.material.textfield.TextInputLayout
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Time Selection -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="16dp"
-                            app:startIconDrawable="@android:drawable/ic_menu_day"
-                            app:boxStrokeColor="#B3E5FC">
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="20dp">
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/et_start_time"
-                                android:layout_width="match_parent"
+                            <!-- Start Time -->
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:hint="Start Time (HH:MM)"
-                                android:inputType="none"
-                                android:enabled="false" />
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginEnd="8dp">
 
-                        </com.google.android.material.textfield.TextInputLayout>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Start Time"
+                                    android:textSize="14sp"
+                                    android:textColor="#666666"
+                                    android:textStyle="bold"
+                                    android:layout_marginBottom="8dp" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_pick_start_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pick Start Time"
-                            android:backgroundTint="#2196F3"
-                            android:layout_marginBottom="16dp" />
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_start_time"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="56dp"
+                                    android:hint="Start"
+                                    android:enabled="false"
+                                    android:background="@drawable/input_background"
+                                    android:padding="16dp"
+                                    android:layout_marginBottom="8dp" />
 
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="16dp"
-                            app:startIconDrawable="@android:drawable/ic_menu_day"
-                            app:boxStrokeColor="#B3E5FC">
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_pick_start_time"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Pick Start"
+                                    android:backgroundTint="#2196F3"
+                                    app:cornerRadius="8dp" />
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/et_end_time"
-                                android:layout_width="match_parent"
+                            </LinearLayout>
+
+                            <!-- End Time -->
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:hint="End Time (HH:MM)"
-                                android:inputType="none"
-                                android:enabled="false" />
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="8dp">
 
-                        </com.google.android.material.textfield.TextInputLayout>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="End Time"
+                                    android:textSize="14sp"
+                                    android:textColor="#666666"
+                                    android:textStyle="bold"
+                                    android:layout_marginBottom="8dp" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_pick_end_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pick End Time"
-                            android:backgroundTint="#2196F3"
-                            android:layout_marginBottom="16dp" />
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_end_time"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="56dp"
+                                    android:hint="End"
+                                    android:enabled="false"
+                                    android:background="@drawable/input_background"
+                                    android:padding="16dp"
+                                    android:layout_marginBottom="8dp" />
 
-                        <com.google.android.material.textfield.TextInputLayout
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_pick_end_time"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Pick End"
+                                    android:backgroundTint="#2196F3"
+                                    app:cornerRadius="8dp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Notes -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="16dp"
-                            app:boxStrokeColor="#B3E5FC">
+                            android:orientation="vertical"
+                            android:layout_marginBottom="20dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Notes (Optional)"
+                                android:textSize="14sp"
+                                android:textColor="#666666"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="8dp" />
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/et_notes"
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="Notes (Optional)"
+                                android:layout_height="100dp"
+                                android:hint="Add any special requirements..."
                                 android:inputType="textMultiLine"
-                                android:lines="3" />
+                                android:gravity="top"
+                                android:background="@drawable/input_background"
+                                android:padding="16dp" />
 
-                        </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
 
                     </LinearLayout>
 
                 </ScrollView>
 
+                <!-- Bottom Buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -192,24 +288,26 @@
                     android:padding="24dp">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_back_to_stations"
+                        android:id="@+id/btn_create_booking"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Back to Stations"
-                        android:backgroundTint="#757575"
+                        android:layout_height="56dp"
+                        android:text="Create Booking"
+                        android:textSize="16sp"
+                        android:backgroundTint="#4CAF50"
                         android:textColor="@android:color/white"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:cornerRadius="12dp"
                         android:layout_marginBottom="12dp" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_create_booking"
+                        android:id="@+id/btn_back_to_stations"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Create Booking"
-                        android:backgroundTint="#2196F3"
+                        android:layout_height="56dp"
+                        android:text="Back to Stations"
+                        android:textSize="16sp"
+                        android:backgroundTint="#757575"
                         android:textColor="@android:color/white"
-                        app:cornerRadius="12dp"
-                        app:elevation="4dp" />
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:cornerRadius="12dp" />
 
                 </LinearLayout>
 
@@ -217,7 +315,7 @@
 
         </androidx.cardview.widget.CardView>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation_reservation"
