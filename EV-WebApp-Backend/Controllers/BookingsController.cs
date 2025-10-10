@@ -37,6 +37,7 @@ public class BookingsController : ControllerBase
             // Role-based filtering
             if (userRole == "ev_owner")
             {
+                // Only show bookings belonging to logged-in EV owner
                 var evOwners = _mongoService.GetCollection<EVOwner>("evowners");
                 var evOwner = await evOwners.Find(e => e.UserId == userId).FirstOrDefaultAsync();
                 if (evOwner != null)
@@ -46,6 +47,7 @@ public class BookingsController : ControllerBase
             }
             else if (userRole == "station_operator")
             {
+                // Station operators only see bookings at their stations
                 var stations = _mongoService.GetCollection<Station>("stations");
                 var operatorStations = await stations.Find(s => s.OperatorId == userId).ToListAsync();
                 var stationIds = operatorStations.Select(s => s.Id).ToList();
@@ -142,6 +144,7 @@ public class BookingsController : ControllerBase
                 return BadRequest(new { message = "Reservation date must be within 7 days from today" });
             }
 
+            // Get EV owner profile
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var evOwners = _mongoService.GetCollection<EVOwner>("evowners");
             var evOwner = await evOwners.Find(e => e.UserId == userId).FirstOrDefaultAsync();
@@ -151,6 +154,7 @@ public class BookingsController : ControllerBase
                 return NotFound(new { message = "EV Owner profile not found" });
             }
 
+            // Validate station
             var stations = _mongoService.GetCollection<Station>("stations");
             var station = await stations.Find(s => s.Id == bookingDto.StationId).FirstOrDefaultAsync();
 
@@ -186,6 +190,7 @@ public class BookingsController : ControllerBase
                 UpdatedAt = DateTime.UtcNow
             };
 
+            // Save to DB
             var bookings = _mongoService.GetCollection<Booking>("bookings");
             await bookings.InsertOneAsync(booking);
 
@@ -231,7 +236,7 @@ public class BookingsController : ControllerBase
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            // Check permissions
+            // Get related station & EV owner
             var stations = _mongoService.GetCollection<Station>("stations");
             var station = await stations.Find(s => s.Id == booking.StationId).FirstOrDefaultAsync();
 
@@ -258,6 +263,7 @@ public class BookingsController : ControllerBase
                 return StatusCode(403, new { message = "Access denied for this status update" });
             }
 
+            // Update status
             string oldStatus = booking.Status;
             booking.Status = statusUpdate.Status;
             booking.UpdatedAt = DateTime.UtcNow;
@@ -414,7 +420,7 @@ public class BookingsController : ControllerBase
                 return StatusCode(403, new { message = "Access denied" });
             }
 
-            // Update station availability if booking was not cancelled or completed
+            // Update station availability if booking was not already cancelled or completed
             if (booking.Status != "cancelled" && booking.Status != "completed")
             {
                 var stations = _mongoService.GetCollection<Station>("stations");
