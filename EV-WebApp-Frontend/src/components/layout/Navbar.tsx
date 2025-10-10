@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, User, Zap } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,9 +32,9 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg">
-              <Zap className="h-6 w-6 text-white" />
-            </div>
+          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
+            <span className="text-white font-bold text-xl">EV</span>
+          </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">EV ChargeHub</h1>
               <p className="text-sm text-muted-foreground">{getRoleLabel(user?.role || '')}</p>

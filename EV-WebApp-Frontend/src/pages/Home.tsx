@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, ArrowRight, Car, Building2, Shield, Clock, MapPin, Smartphone } from 'lucide-react';
+import { ArrowRight, Car, Building2, Shield, Clock, MapPin, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,9 +11,11 @@ const Home: React.FC = () => {
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
-              <Zap className="h-6 w-6 text-white" />
-            </div>
+          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
+            <span className="text-white font-bold text-xl">EV</span>
+          </div>
+
+
             <div>
               <h1 className="text-2xl font-bold text-foreground">EV ChargeHub</h1>
               <p className="text-sm text-muted-foreground">Smart Charging Solutions</p>
@@ -141,9 +143,9 @@ const Home: React.FC = () => {
 
           <Card className="border-0 shadow-lg">
             <CardHeader>
-              <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-2">
-                <Zap className="h-6 w-6 text-secondary" />
-              </div>
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
+            <span className="text-white font-bold text-xl">EV</span>
+          </div>
               <CardTitle>Fast Charging</CardTitle>
               <CardDescription>
                 Both AC and DC charging options available for quick and efficient charging.
@@ -205,9 +207,9 @@ const Home: React.FC = () => {
       <footer className="container mx-auto px-4 py-8 border-t border-border/50">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-3 mb-4 md:mb-0">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg">
-              <Zap className="h-4 w-4 text-white" />
-            </div>
+          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
+            <span className="text-white font-bold text-xl">EV</span>
+          </div>
             <span className="text-lg font-semibold text-foreground">EV ChargeHub</span>
           </div>
           <p className="text-sm text-muted-foreground">

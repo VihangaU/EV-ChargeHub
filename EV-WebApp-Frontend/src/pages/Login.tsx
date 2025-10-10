@@ -82,9 +82,9 @@ const Login: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg">
-              <Zap className="h-8 w-8 text-white" />
-            </div>
+          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-lg">
+            <span className="text-white font-bold text-xl">EV</span>
+          </div>
           </Link>
           <h1 className="text-4xl font-bold text-foreground mb-2">Welcome Back</h1>
           <p className="text-lg text-muted-foreground">Sign in to your EV ChargeHub account</p>
