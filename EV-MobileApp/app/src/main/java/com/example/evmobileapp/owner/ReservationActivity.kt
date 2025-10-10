@@ -214,16 +214,16 @@ class ReservationActivity : AppCompatActivity() {
         showForm()
     }
 
-    private fun showStations() {
-        tvTitle.text = "Select Station"
-        rvStations.visibility = View.VISIBLE
-        findViewById<View>(R.id.booking_form).visibility = View.GONE
-        clearForm()
+    private fun showForm() {
+        findViewById<View>(R.id.stations_container).visibility = View.GONE
+        findViewById<View>(R.id.booking_form).visibility = View.VISIBLE
     }
 
-    private fun showForm() {
-        rvStations.visibility = View.GONE
-        findViewById<View>(R.id.booking_form).visibility = View.VISIBLE
+    private fun showStations() {
+        tvTitle.text = "Book a Charging Station"
+        findViewById<View>(R.id.stations_container).visibility = View.VISIBLE
+        findViewById<View>(R.id.booking_form).visibility = View.GONE
+        clearForm()
     }
 
     private fun clearForm() {
