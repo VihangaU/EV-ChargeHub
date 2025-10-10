@@ -299,6 +299,27 @@ public class BookingsController : ControllerBase
                 return NotFound(new { message = "Booking not found" });
             }
 
+            // Add validation for 12-hour advance notice
+            if (!string.IsNullOrEmpty(updateDto.ReservationDate) || !string.IsNullOrEmpty(updateDto.StartTime))
+            {
+                var reservationDateTime = DateTime.Parse($"{existingBooking.ReservationDate} {existingBooking.StartTime}");
+                if (!string.IsNullOrEmpty(updateDto.ReservationDate))
+                {
+                    reservationDateTime = DateTime.Parse($"{updateDto.ReservationDate} {existingBooking.StartTime}");
+                }
+                if (!string.IsNullOrEmpty(updateDto.StartTime))
+                {
+                    var dateToUse = !string.IsNullOrEmpty(updateDto.ReservationDate) ? updateDto.ReservationDate : existingBooking.ReservationDate;
+                    reservationDateTime = DateTime.Parse($"{dateToUse} {updateDto.StartTime}");
+                }
+
+                var hoursUntilReservation = (reservationDateTime - DateTime.Now).TotalHours;
+                if (hoursUntilReservation < 12)
+                {
+                    return BadRequest(new { message = "Bookings can only be updated at least 12 hours before the reservation time" });
+                }
+            }
+
             // Check permissions
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
