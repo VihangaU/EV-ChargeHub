@@ -126,6 +126,22 @@ public class BookingsController : ControllerBase
                 return StatusCode(403, new { message = "Only EV owners can create bookings" });
             }
 
+            // Add validation for reservation date (within 7 days)
+            if (!DateTime.TryParse(bookingDto.ReservationDate, out DateTime reservationDate))
+            {
+                return BadRequest(new { message = "Invalid reservation date format" });
+            }
+
+            var daysDifference = (reservationDate.Date - DateTime.Now.Date).TotalDays;
+            if (daysDifference < 0)
+            {
+                return BadRequest(new { message = "Reservation date cannot be in the past" });
+            }
+            if (daysDifference > 7)
+            {
+                return BadRequest(new { message = "Reservation date must be within 7 days from today" });
+            }
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var evOwners = _mongoService.GetCollection<EVOwner>("evowners");
             var evOwner = await evOwners.Find(e => e.UserId == userId).FirstOrDefaultAsync();
