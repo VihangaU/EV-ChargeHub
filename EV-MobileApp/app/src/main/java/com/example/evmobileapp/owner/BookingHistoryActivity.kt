@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -19,6 +20,8 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.evmobileapp.R
 import com.example.evmobileapp.utils.ApiClient
 import com.example.evmobileapp.utils.SessionManager
@@ -44,9 +47,11 @@ class BookingHistoryActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
-    private lateinit var bookingListView: ListView
+    private lateinit var bookingRecyclerView: RecyclerView
+    private lateinit var emptyStateLayout: LinearLayout
     private lateinit var bottomNavigation: BottomNavigationView
     private val bookings = mutableListOf<JSONObject>()
+    private lateinit var adapter: BookingHistoryAdapter
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,9 +61,11 @@ class BookingHistoryActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         apiClient = ApiClient()
 
-        bookingListView = findViewById(R.id.booking_history_list)
+        bookingRecyclerView = findViewById(R.id.booking_history_list)
+        emptyStateLayout = findViewById(R.id.empty_state)
         bottomNavigation = findViewById(R.id.bottom_navigation_history)
 
+        setupRecyclerView()
         setupBottomNavigation()
 
         val token = sessionManager.getToken()
@@ -67,6 +74,14 @@ class BookingHistoryActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "No token found. Please login.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun setupRecyclerView() {
+        adapter = BookingHistoryAdapter(this, bookings) { booking ->
+            showBookingDetails(booking)
+        }
+        bookingRecyclerView.adapter = adapter
+        bookingRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
     private fun setupBottomNavigation() {
@@ -107,16 +122,13 @@ class BookingHistoryActivity : AppCompatActivity() {
                     }
 
                     runOnUiThread {
-                        if (bookings.isEmpty()) {
-                            Toast.makeText(this@BookingHistoryActivity, "No bookings found", Toast.LENGTH_SHORT).show()
-                        }
-                        bookingListView.adapter = BookingHistoryAdapter(
-                            this@BookingHistoryActivity, bookings
-                        ) { booking -> showBookingDetails(booking) }
+                        adapter.notifyDataSetChanged()
+                        updateEmptyState()
                     }
                 } else {
                     runOnUiThread {
                         Toast.makeText(this@BookingHistoryActivity, "Failed to fetch booking history", Toast.LENGTH_SHORT).show()
+                        updateEmptyState()
                     }
                 }
             }
@@ -124,12 +136,21 @@ class BookingHistoryActivity : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
                     Toast.makeText(this@BookingHistoryActivity, "Network error", Toast.LENGTH_SHORT).show()
+                    updateEmptyState()
                 }
             }
         })
     }
 
-    private fun refreshBookings(token: String) = fetchBookingHistory(token)
+    private fun updateEmptyState() {
+        if (bookings.isEmpty()) {
+            emptyStateLayout.visibility = View.VISIBLE
+            bookingRecyclerView.visibility = View.GONE
+        } else {
+            emptyStateLayout.visibility = View.GONE
+            bookingRecyclerView.visibility = View.VISIBLE
+        }
+    }
 
     private fun showBookingDetails(booking: JSONObject) {
         val token = sessionManager.getToken() ?: return
@@ -442,51 +463,85 @@ class BookingHistoryActivity : AppCompatActivity() {
         })
     }
 
+    // Add this method to refresh the booking list
+    private fun refreshBookings(token: String) {
+        fetchBookingHistory(token)
+    }
+
     private class BookingHistoryAdapter(
         private val context: Context,
         private val bookings: List<JSONObject>,
         private val onItemClick: (JSONObject) -> Unit
-    ) : BaseAdapter() {
-        override fun getCount(): Int = bookings.size
-        override fun getItem(position: Int): Any = bookings[position]
-        override fun getItemId(position: Int): Long = position.toLong()
+    ) : RecyclerView.Adapter<BookingHistoryAdapter.ViewHolder>() {
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val rowView = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_reservation, parent, false)
+        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val tvStationName: TextView = view.findViewById(R.id.tv_station_name)
+            val tvStationAddress: TextView = view.findViewById(R.id.tv_station_address)
+            val tvStatus: TextView = view.findViewById(R.id.tv_status)
+            val tvDate: TextView = view.findViewById(R.id.tv_date)
+            val tvTimeRange: TextView = view.findViewById(R.id.tv_time_range)
+            val tvDuration: TextView = view.findViewById(R.id.tv_duration)
+            val tvTotalCost: TextView = view.findViewById(R.id.tv_total_cost)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(context).inflate(R.layout.item_booking_history, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val booking = bookings[position]
 
-            val tvStationName = rowView.findViewById<TextView>(R.id.tv_station_name)
-            val tvAddress = rowView.findViewById<TextView>(R.id.tv_address)
-            val tvDateTime = rowView.findViewById<TextView>(R.id.tv_date_time)
-            val tvStatus = rowView.findViewById<TextView>(R.id.tv_status)
-            val ivIcon = rowView.findViewById<ImageView>(R.id.iv_icon)
+            holder.tvStationName.text = booking.optString("stationName", "Unknown Station")
+            holder.tvStationAddress.text = booking.optString("stationAddress", "N/A")
+            
+            val status = booking.optString("status", "Unknown").replaceFirstChar { it.uppercase() }
+            holder.tvStatus.text = status
 
-            tvStationName.text = booking.optString("stationName", "Unknown Station")
-            tvAddress.text = booking.optString("stationAddress", "N/A")
+            // Format date
+            val dateStr = booking.optString("reservationDate", "")
+            holder.tvDate.text = if (dateStr.isNotEmpty()) {
+                try {
+                    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val outputFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
+                    val date = inputFormat.parse(dateStr)
+                    outputFormat.format(date ?: Date())
+                } catch (e: Exception) {
+                    dateStr
+                }
+            } else "N/A"
+
+            // Time range
             val startTime = booking.optString("startTime", "")
             val endTime = booking.optString("endTime", "")
-            tvDateTime.text = "${booking.optString("reservationDate", "")} $startTime - $endTime"
-            val status = booking.optString("status", "Unknown").replaceFirstChar { it.uppercase() }
-            tvStatus.text = status
+            holder.tvTimeRange.text = "$startTime - $endTime"
 
-            tvStatus.setTextColor(when (status.lowercase()) {
-                "pending" -> context.getColor(android.R.color.holo_orange_dark)
-                "approved", "completed" -> context.getColor(android.R.color.holo_green_dark)
-                "cancelled" -> context.getColor(android.R.color.holo_red_dark)
-                else -> context.getColor(android.R.color.black)
-            })
+            // Duration
+            holder.tvDuration.text = "${booking.optInt("duration", 0)}"
 
-            ivIcon.setImageResource(when (status.lowercase()) {
-                "pending" -> android.R.drawable.ic_dialog_alert
-                "approved" -> android.R.drawable.ic_dialog_info
-                "completed" -> android.R.drawable.ic_dialog_email
-                "cancelled" -> android.R.drawable.ic_delete
-                else -> android.R.drawable.ic_menu_recent_history
-            })
-            ivIcon.setColorFilter(context.getColor(android.R.color.holo_blue_dark))
+            // Cost
+            holder.tvTotalCost.text = "LKR ${booking.optInt("totalCost", 0)}"
 
-            rowView.setOnClickListener { onItemClick(booking) }
-            return rowView
+            // Status color
+            val statusBackground = holder.tvStatus.background as? GradientDrawable
+                ?: GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = 40f
+                }
+            
+            when (status.lowercase()) {
+                "pending" -> statusBackground.setColor(context.getColor(android.R.color.holo_orange_dark))
+                "approved" -> statusBackground.setColor(context.getColor(android.R.color.holo_blue_bright))
+                "completed" -> statusBackground.setColor(context.getColor(android.R.color.holo_green_dark))
+                "cancelled" -> statusBackground.setColor(context.getColor(android.R.color.holo_red_dark))
+                "in_progress" -> statusBackground.setColor(context.getColor(android.R.color.holo_purple))
+                else -> statusBackground.setColor(context.getColor(android.R.color.darker_gray))
+            }
+            holder.tvStatus.background = statusBackground
+
+            holder.itemView.setOnClickListener { onItemClick(booking) }
         }
+
+        override fun getItemCount(): Int = bookings.size
     }
 }
