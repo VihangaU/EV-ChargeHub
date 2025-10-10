@@ -59,12 +59,6 @@ const navItems: NavItem[] = [
     roles: ['station_operator'],
   },
   {
-    title: 'Station Map',
-    href: '/dashboard/station-map',
-    icon: MapPin,
-    roles: ['station_operator'],
-  },
-  {
     title: 'Station Bookings',
     href: '/dashboard/station-bookings',
     icon: Calendar,

@@ -146,10 +146,6 @@ const StationOperatorDashboard: React.FC = () => {
               View Bookings
             </Button>
             <Button className="w-full justify-start" variant="outline">
-              <MapPin className="h-4 w-4 mr-2" />
-              Station Map
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
               <Zap className="h-4 w-4 mr-2" />
               Update Schedule
             </Button>
