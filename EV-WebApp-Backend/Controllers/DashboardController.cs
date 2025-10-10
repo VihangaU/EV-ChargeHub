@@ -32,23 +32,28 @@ public class DashboardController : ControllerBase
             switch (userRole)
             {
                 case "backoffice":
+                    // Collections
                     var users = _mongoService.GetCollection<User>("users");
                     var stations = _mongoService.GetCollection<Station>("stations");
                     var bookings = _mongoService.GetCollection<Booking>("bookings");
                     var evOwners = _mongoService.GetCollection<EVOwner>("evowners");
 
+                   // Counts
                     var totalUsers = await users.CountDocumentsAsync(FilterDefinition<User>.Empty);
                     var totalStations = await stations.CountDocumentsAsync(FilterDefinition<Station>.Empty);
                     var totalBookings = await bookings.CountDocumentsAsync(FilterDefinition<Booking>.Empty);
                     var totalEVOwners = await evOwners.CountDocumentsAsync(FilterDefinition<EVOwner>.Empty);
 
+                   // Active bookings (approved or in_progress)
                     var activeBookingsFilter = Builders<Booking>.Filter.In(b => b.Status, new[] { "approved", "in_progress" });
                     var activeBookings = await bookings.CountDocumentsAsync(activeBookingsFilter);
 
+                   // Completed bookings and revenue
                     var completedBookingsFilter = Builders<Booking>.Filter.Eq(b => b.Status, "completed");
                     var completedBookingsList = await bookings.Find(completedBookingsFilter).ToListAsync();
                     var totalRevenue = completedBookingsList.Sum(b => b.TotalCost);
 
+                   // Available slots across all stations
                     var stationsList = await stations.Find(FilterDefinition<Station>.Empty).ToListAsync();
                     var availableSlots = stationsList.Sum(s => s.AvailableSlots);
 
@@ -65,25 +70,30 @@ public class DashboardController : ControllerBase
                     break;
 
                 case "station_operator":
+                    // Get stations managed by the operator
                     var operatorStations = await _mongoService.GetCollection<Station>("stations")
                         .Find(s => s.OperatorId == userId).ToListAsync();
                     var stationIds = operatorStations.Select(s => s.Id).ToList();
 
+                    // Bookings for operator's stations
                     var operatorBookingsFilter = Builders<Booking>.Filter.In(b => b.StationId, stationIds);
                     var operatorBookings = await _mongoService.GetCollection<Booking>("bookings")
                         .CountDocumentsAsync(operatorBookingsFilter);
 
+                    // Active bookings
                     var operatorActiveBookingsFilter = operatorBookingsFilter &
                         Builders<Booking>.Filter.In(b => b.Status, new[] { "approved", "in_progress" });
                     var operatorActiveBookings = await _mongoService.GetCollection<Booking>("bookings")
                         .CountDocumentsAsync(operatorActiveBookingsFilter);
 
+                    // Completed bookings and revenue
                     var operatorCompletedBookingsFilter = operatorBookingsFilter &
                         Builders<Booking>.Filter.Eq(b => b.Status, "completed");
                     var operatorCompletedBookings = await _mongoService.GetCollection<Booking>("bookings")
                         .Find(operatorCompletedBookingsFilter).ToListAsync();
                     var operatorRevenue = operatorCompletedBookings.Sum(b => b.TotalCost);
 
+                    // Available slots for operator's stations
                     var operatorAvailableSlots = operatorStations.Sum(s => s.AvailableSlots);
 
                     stats = new
@@ -97,20 +107,24 @@ public class DashboardController : ControllerBase
                     break;
 
                 case "ev_owner":
+                    // Get EV Owner profile
                     var evOwner = await _mongoService.GetCollection<EVOwner>("evowners")
                         .Find(e => e.UserId == userId).FirstOrDefaultAsync();
 
                     if (evOwner != null)
                     {
+                        // All bookings for this EV owner
                         var userBookingsFilter = Builders<Booking>.Filter.Eq(b => b.EVOwnerId, evOwner.Id);
                         var userBookings = await _mongoService.GetCollection<Booking>("bookings")
                             .CountDocumentsAsync(userBookingsFilter);
 
+                        // Active bookings
                         var userActiveBookingsFilter = userBookingsFilter &
                             Builders<Booking>.Filter.In(b => b.Status, new[] { "approved", "in_progress" });
                         var userActiveBookings = await _mongoService.GetCollection<Booking>("bookings")
                             .CountDocumentsAsync(userActiveBookingsFilter);
 
+                        // Completed bookings and total spent
                         var userCompletedBookingsFilter = userBookingsFilter &
                             Builders<Booking>.Filter.Eq(b => b.Status, "completed");
                         var userCompletedBookings = await _mongoService.GetCollection<Booking>("bookings")
@@ -120,6 +134,7 @@ public class DashboardController : ControllerBase
                             .Find(userCompletedBookingsFilter).ToListAsync();
                         var totalSpent = userCompletedBookingsList.Sum(b => b.TotalCost);
 
+                        // Available active stations
                         var activeStationsFilter = Builders<Station>.Filter.Eq(s => s.Status, "active");
                         var availableStations = await _mongoService.GetCollection<Station>("stations")
                             .CountDocumentsAsync(activeStationsFilter);
@@ -160,6 +175,7 @@ public class DashboardController : ControllerBase
             switch (userRole)
             {
                 case "backoffice":
+                    // Fetch recent bookings and stations
                     var recentBookings = await _mongoService.GetCollection<Booking>("bookings")
                         .Find(FilterDefinition<Booking>.Empty)
                         .Sort(Builders<Booking>.Sort.Descending(b => b.CreatedAt))
@@ -172,6 +188,7 @@ public class DashboardController : ControllerBase
                         .Limit(5)
                         .ToListAsync();
 
+                    // Format activities
                     activities.AddRange(recentBookings.Select(b => new
                     {
                         type = "booking",
@@ -190,14 +207,17 @@ public class DashboardController : ControllerBase
                         status = s.Status
                     }));
 
+                    // Sort and limit to 10
                     activities = activities.OrderByDescending(a => ((dynamic)a).timestamp).Take(10).ToList();
                     break;
 
                 case "station_operator":
+                    // Fetch stations for this operator
                     var operatorStations = await _mongoService.GetCollection<Station>("stations")
                         .Find(s => s.OperatorId == userId).ToListAsync();
                     var stationIds = operatorStations.Select(s => s.Id).ToList();
 
+                    // Recent bookings for operator stations
                     var operatorBookings = await _mongoService.GetCollection<Booking>("bookings")
                         .Find(b => stationIds.Contains(b.StationId))
                         .Sort(Builders<Booking>.Sort.Descending(b => b.CreatedAt))
@@ -215,11 +235,13 @@ public class DashboardController : ControllerBase
                     break;
 
                 case "ev_owner":
+                    // Fetch EV Owner profile
                     var evOwner = await _mongoService.GetCollection<EVOwner>("evowners")
                         .Find(e => e.UserId == userId).FirstOrDefaultAsync();
 
                     if (evOwner != null)
                     {
+                        // Recent bookings for this EV owner
                         var userBookings = await _mongoService.GetCollection<Booking>("bookings")
                             .Find(b => b.EVOwnerId == evOwner.Id)
                             .Sort(Builders<Booking>.Sort.Descending(b => b.CreatedAt))
