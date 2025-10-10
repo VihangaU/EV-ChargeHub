@@ -62,36 +62,48 @@ const Home: React.FC = () => {
       {/* EV Images Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div className="relative overflow-hidden rounded-2xl shadow-lg">
-            <div className="h-64 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-              <Car className="h-24 w-24 text-white opacity-80" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute bottom-4 left-4 text-white">
-              <h3 className="text-xl font-semibold">Tesla Model 3</h3>
-              <p className="text-sm opacity-90">Long Range Performance</p>
-            </div>
+   
+        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-transparent transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl">
+          <div className="h-80 flex items-center justify-center bg-transparent">
+            <img
+              src="/RollsRoyce.png"
+              alt="Rolls Royce"
+              className="h-full w-full object-contain"
+            />
           </div>
-          <div className="relative overflow-hidden rounded-2xl shadow-lg">
-            <div className="h-64 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-              <Car className="h-24 w-24 text-white opacity-80" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute bottom-4 left-4 text-white">
-              <h3 className="text-xl font-semibold">Nissan Leaf</h3>
-              <p className="text-sm opacity-90">Eco-Friendly Choice</p>
-            </div>
+          <div className="absolute bottom-4 left-4 text-black drop-shadow-lg p-2">
+            <h3 className="text-xl font-semibold mb-2 text-gray-800">Rolls Royce</h3>
+            <p className="text-sm text-gray-600 opacity-90">Long Range Performance</p>
           </div>
-          <div className="relative overflow-hidden rounded-2xl shadow-lg">
-            <div className="h-64 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
-              <Car className="h-24 w-24 text-white opacity-80" />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute bottom-4 left-4 text-white">
-              <h3 className="text-xl font-semibold">BMW iX3</h3>
-              <p className="text-sm opacity-90">Luxury Electric SUV</p>
-            </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-transparent transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl">
+          <div className="h-80 flex items-center justify-center bg-transparent">
+            <img
+              src="/NissanLeaf.png"
+              alt="Rolls Royce"
+              className="h-full w-full object-contain"
+            />
           </div>
+          <div className="absolute bottom-4 left-4 text-black drop-shadow-lg p-2">
+            <h3 className="text-xl font-semibold mb-2 text-gray-800">Nissan Leaf</h3>
+            <p className="text-sm text-gray-600 opacity-90">Eco-Friendly Choice</p>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl shadow-lg bg-transparent transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl">
+          <div className="h-80 flex items-center justify-center bg-transparent">
+            <img
+              src="/BMW.png"
+              alt="Rolls Royce"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <div className="absolute bottom-4 left-4 text-black drop-shadow-lg p-2">
+            <h3 className="text-xl font-semibold mb-2 text-gray-800">BMW iX3</h3>
+            <p className="text-sm text-gray-600 opacity-90">Luxury Electric SUV</p>
+          </div>
+        </div>
         </div>
       </section>
 
@@ -213,7 +225,7 @@ const Home: React.FC = () => {
             <span className="text-lg font-semibold text-foreground">EV ChargeHub</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 EV ChargeHub. All rights reserved. Powering Sri Lanka's electric future.
+            © 2025 EV ChargeHub. All rights reserved. Powering Sri Lanka's electric future.
           </p>
         </div>
       </footer>
