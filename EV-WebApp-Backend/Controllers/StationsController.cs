@@ -237,6 +237,25 @@ public class StationsController : ControllerBase
                 return Forbid();
             }
 
+            // Check for active bookings before deletion
+            var bookings = _mongoService.GetCollection<Booking>("bookings");
+            var activeBookingsFilter = Builders<Booking>.Filter.And(
+                Builders<Booking>.Filter.Eq(b => b.StationId, id),
+                Builders<Booking>.Filter.In(b => b.Status, new[] { "pending", "approved", "in_progress" })
+            );
+
+            var activeBookingsCount = await bookings.CountDocumentsAsync(activeBookingsFilter);
+
+            if (activeBookingsCount > 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Cannot delete station with active bookings",
+                    activeBookings = activeBookingsCount,
+                    detail = "Please wait for all pending, approved, or in-progress bookings to complete before deleting this station."
+                });
+            }
+
             await stations.DeleteOneAsync(s => s.Id == id);
             return Ok(new { message = "Station deleted successfully" });
         }
