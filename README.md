@@ -2,7 +2,7 @@
 -------------------------------
 
 ## 🚗 Overview
-EV ChargeHub is a full-stack solution designed to streamline the EV charging experience in Sri Lanka. The platform offers role-based dashboards, real-time station availability, booking management, and comprehensive analytics.
+A full stack EV charging platform with separate web frontend, .NET backend, and mobile app support for bookings, station management, dashboards, and role-based access. The platform offers role-based dashboards, real-time station availability, booking management, and comprehensive analytics.
 
 -------------------------------
 
